@@ -24,7 +24,7 @@ def login():
     return LoginAPI.login(req_data)
 
 
-@app.route('/verify', methods=['POST'])
+@app.route('/verify', methods=['GET'])  
 def verify():
     auth_header = request.headers.get('Authorization')
     return User.get(auth_header)
