@@ -1,25 +1,26 @@
-from datetime import datetime
+import datetime
+import uuid
 
-from sqlalchemy import Column, String, DateTime
+import bcrypt
+from sqlalchemy import Column, String, Boolean, DateTime
 
 from db import Base
 
 
 class UserDAO(Base):
-    __tablename__ = 'users'
+    """User model for storing user-related details."""
+    __tablename__ = "users"
 
+    # String UUID instead of auto-increment integer (BigQuery doesn't auto-increment)
     id = Column(String, primary_key=True)
-    username = Column(String, unique=True, nullable=False)
-    email = Column(String, nullable=False)
-    password_hash = Column(String, nullable=False)
-    role = Column(String, nullable=False, default="participant")
-    full_name = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    email = Column(String(255), unique=True, nullable=False)
+    password = Column(String(255), nullable=False)
+    registered_on = Column(DateTime, nullable=False)
+    admin = Column(Boolean, nullable=False, default=False)
 
-    def __init__(self, id, username, email, password_hash, role, full_name=None):
-        self.id = id
-        self.username = username
+    def __init__(self, email, password, admin=False):
+        self.id = f"user_{uuid.uuid4().hex[:12]}"
         self.email = email
-        self.password_hash = password_hash
-        self.role = role
-        self.full_name = full_name
+        self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        self.registered_on = datetime.datetime.now()
+        self.admin = admin
