@@ -21,6 +21,7 @@ class EnrollmentDAO(Base):
     )
 
     def __init__(self, candidate_id, trial_id, screening_result_id, created_at, status):
+        self.id = id
         self.candidate_id = candidate_id
         self.trial_id = trial_id
         self.screening_result_id = screening_result_id
