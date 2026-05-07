@@ -1,0 +1,6 @@
+flask
+bcrypt
+sqlalchemy
+sqlalchemy-utils
+sqlalchemy-bigquery
+pyjwt
