@@ -1,43 +1,40 @@
 import os
 
-import uvicorn
-from fastapi import FastAPI
+from flask import Flask, request
 
 from db import Base, engine
-from pdmodels.login_req import LoginReq
-from pdmodels.token_req import TokenReq
-from pdmodels.user_req import UserReq
+from resources.loginapi import LoginAPI
 from resources.user import User
 
-app = FastAPI(title="IAM Service", version="0.1.0")
+app = Flask(__name__)
+app.config["DEBUG"] = False  # disable in production / Cloud Run
+
 Base.metadata.create_all(engine)
 
 
-@app.post("/users")
-def register_user(u_req: UserReq):
-    return User.register(u_req)
+@app.route('/register', methods=['POST'])
+def register():
+    req_data = request.get_json()
+    return User.create(req_data)
 
 
-@app.post("/login")
-def login(login_req: LoginReq):
-    return User.login(login_req)
+@app.route('/login', methods=['POST'])
+def login():
+    req_data = request.get_json()
+    return LoginAPI.login(req_data)
 
 
-@app.post("/validate")
-def validate_token(token_req: TokenReq):
-    return User.validate(token_req)
+@app.route('/verify', methods=['POST'])
+def verify():
+    auth_header = request.headers.get('Authorization')
+    return User.get(auth_header)
 
 
-@app.get("/users/{u_id}")
-def get_user(u_id: str):
-    return User.get(u_id)
-
-
-@app.get("/health")
+@app.route('/health', methods=['GET'])
 def health():
-    return {"status": "ok"}
+    return {'status': 'ok'}
 
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
