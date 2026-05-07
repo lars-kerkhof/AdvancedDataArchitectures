@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
+import os
 
 from db import Base, engine
 from pdmodels.enrollment_req import EnrollmentReq
@@ -32,4 +33,5 @@ def delete_enrollment(e_id: int):
 
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=5000, reload=True)
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
