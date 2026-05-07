@@ -32,6 +32,10 @@ def delete_enrollment(e_id: int):
     return Enrollment.delete(e_id)
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    uvicorn.run("app:app", host="0.0.0.0", port=port)
+    uvicorn.run("app:app", host="0.0.0.0", port=5000, reload=True)
