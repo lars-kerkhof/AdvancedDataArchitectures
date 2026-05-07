@@ -13,4 +13,4 @@ EXPOSE 8080
 # Enviroment Variables
 ENV DB_URL=sqlite:///enrollment.db
 # Run our App
-CMD ["python3","app.py"]
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-8080}"]
