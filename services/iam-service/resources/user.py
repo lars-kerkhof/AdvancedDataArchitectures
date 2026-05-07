@@ -5,9 +5,6 @@ from db import Session
 from jwtutil import encode_auth_token, decode_auth_token
 
 
-# Adapted from Lab 9 user service.
-# Reference: https://realpython.com/token-based-authentication-with-flask/
-
 class User:
 
     @staticmethod
@@ -20,7 +17,6 @@ class User:
                 res = {'status': 'fail', 'message': 'Email and password are required.'}
                 return make_response(jsonify(res)), 400
 
-            # Check if user already exists (by email — lab bug filtered by id)
             existing = session.query(UserDAO).filter(UserDAO.email == email).first()
             if existing:
                 res = {'status': 'fail', 'message': 'User already exists. Please log in.'}
@@ -30,7 +26,6 @@ class User:
                 user = UserDAO(email=email, password=password)
                 session.add(user)
                 session.commit()
-                # Generate the auth token using the new user's id
                 auth_token = encode_auth_token(user.id)
                 res = {
                     'status': 'success',
@@ -48,8 +43,6 @@ class User:
 
     @staticmethod
     def get(auth_header):
-        """Verify a token from the Authorization: Bearer <token> header
-        and return the associated user."""
         if auth_header:
             try:
                 auth_token = auth_header.split(" ")[1]
@@ -63,12 +56,12 @@ class User:
             return make_response(jsonify(res)), 401
 
         resp = decode_auth_token(auth_token)
-        if isinstance(resp, str):
-            # decode_auth_token returns an error string on failure
-            res = {'status': 'fail', 'message': resp}
+
+        if not isinstance(resp, str) or not resp.startswith("user_"):
+            error_msg = resp if isinstance(resp, str) else "Invalid token."
+            res = {'status': 'fail', 'message': error_msg}
             return make_response(jsonify(res)), 401
 
-        # resp is the user_id (string UUID)
         session = Session()
         try:
             user = session.query(UserDAO).filter(UserDAO.id == resp).first()
