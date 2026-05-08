@@ -20,7 +20,7 @@ class EnrollmentDAO(Base):
         backref=backref("enrollment", uselist=False, cascade="all, delete")
     )
 
-    def __init__(self, candidate_id, trial_id, screening_result_id, created_at, status):
+    def __init__(self, id, candidate_id, trial_id, screening_result_id, created_at, status):
         self.id = id
         self.candidate_id = candidate_id
         self.trial_id = trial_id
