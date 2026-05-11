@@ -1,0 +1,7 @@
+{
+  "title": "Hypertension Drug Trial",
+  "condition": "hypertension",
+  "min_age": 18,
+  "max_age": 80,
+  "country": "Germany"
+}
