@@ -17,21 +17,32 @@ class Enrollment:
         session = Session()
 
         enrollment = EnrollmentDAO(
-            e_req.candidate_id,
-            e_req.trial_id,
-            e_req.screening_result_id,
-            datetime.now(),
-            StatusDAO(STATUS_READY_FOR_CONSENT, datetime.now())
+            candidate_id=e_req.candidate_id,
+            trial_id=e_req.trial_id,
+            match_score=e_req.match_score,
+            match_reason=e_req.match_reason,
+            created_at=datetime.now(),
+            status=StatusDAO(STATUS_READY_FOR_CONSENT, datetime.now())
         )
 
         session.add(enrollment)
         session.commit()
         session.refresh(enrollment)
-        enrollment_id = enrollment.id
+
+        output = {
+            "enrollment_id": enrollment.id,
+            "candidate_id": enrollment.candidate_id,
+            "trial_id": enrollment.trial_id,
+            "match_score": enrollment.match_score,
+            "match_reason": enrollment.match_reason,
+            "created_at": enrollment.created_at.isoformat(),
+            "status": enrollment.status.status_name
+        }
+
         session.close()
 
         return JSONResponse(
-            content=jsonable_encoder({"enrollment_id": enrollment_id}),
+            content=jsonable_encoder(output),
             status_code=status.HTTP_201_CREATED
         )
 
@@ -46,7 +57,8 @@ class Enrollment:
                 "enrollment_id": enrollment.id,
                 "candidate_id": enrollment.candidate_id,
                 "trial_id": enrollment.trial_id,
-                "screening_result_id": enrollment.screening_result_id,
+                "match_score": enrollment.match_score,
+                "match_reason": enrollment.match_reason,
                 "created_at": enrollment.created_at.isoformat(),
                 "status": {
                     "status": status_obj.status_name,
