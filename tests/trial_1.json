@@ -1,0 +1,8 @@
+{
+  "title": "Diabetes Treatment Study",
+  "condition": "diabetes",
+  "min_age": 18,
+  "max_age": 65,
+  "country": "Netherlands"
+}
+
