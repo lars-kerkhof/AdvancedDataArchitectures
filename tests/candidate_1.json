@@ -1,0 +1,11 @@
+{
+  "full_name": "John Doe",
+  "email": "john.doe@example.com",
+  "phone": "+31612345678",
+  "date_of_birth": "1985-06-15",
+  "sex": "male",
+  "country": "Netherlands",
+  "conditions": ["diabetes"],
+  "medications": ["metformin"],
+  "allergies": []
+}
