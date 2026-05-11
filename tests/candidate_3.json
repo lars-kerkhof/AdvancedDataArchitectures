@@ -1,0 +1,11 @@
+{
+  "full_name": "Bob Brown",
+  "email": "bob.brown@example.com",
+  "phone": "+31699999999",
+  "date_of_birth": "1970-01-01",
+  "sex": "male",
+  "country": "Belgium",
+  "conditions": ["asthma"],
+  "medications": [],
+  "allergies": []
+}
