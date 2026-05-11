@@ -1,0 +1,7 @@
+{
+  "title": "Cancer Immunotherapy Study",
+  "condition": "cancer",
+  "min_age": 40,
+  "max_age": 75,
+  "country": "USA"
+}
