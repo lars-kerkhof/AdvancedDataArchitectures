@@ -1,0 +1,12 @@
+{
+  "full_name": "Jane Smith",
+  "email": "jane.smith@example.com",
+  "phone": "+31687654321",
+  "date_of_birth": "2005-02-10",
+  "sex": "female",
+  "country": "Germany",
+  "conditions": ["hypertension"],
+  "medications": [],
+  "allergies": ["penicillin"]
+}
+
