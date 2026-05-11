@@ -1,8 +1,9 @@
 from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
+from auth import require_admin, require_user
 from db import Base, engine
 from pdmodels.trial_req import TrialReq, TrialStatusEnum
 from resources.trial import Trial
@@ -12,27 +13,27 @@ Base.metadata.create_all(engine)
 
 
 @app.post("/trials")
-def create_trial(t_req: TrialReq):
+def create_trial(t_req: TrialReq, _admin=Depends(require_admin)):
     return Trial.create(t_req)
 
 
 @app.get("/trials/{t_id}")
-def get_trial(t_id: str):
+def get_trial(t_id: str, _user=Depends(require_user)):
     return Trial.get(t_id)
 
 
 @app.get("/trials")
-def list_trials(status: Optional[TrialStatusEnum] = None):
+def list_trials(status: Optional[TrialStatusEnum] = None, _user=Depends(require_user)):
     return Trial.list(status_filter=status)
 
 
 @app.put("/trials/{t_id}")
-def update_trial(t_id: str, t_req: TrialReq):
+def update_trial(t_id: str, t_req: TrialReq, _admin=Depends(require_admin)):
     return Trial.update(t_id, t_req)
 
 
 @app.delete("/trials/{t_id}")
-def delete_trial(t_id: str):
+def delete_trial(t_id: str, _admin=Depends(require_admin)):
     return Trial.delete(t_id)
 
 
