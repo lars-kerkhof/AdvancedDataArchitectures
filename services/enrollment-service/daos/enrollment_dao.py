@@ -23,7 +23,7 @@ class EnrollmentDAO(Base):
 
     def __init__(self, candidate_id, trial_id, match_score, match_reason, created_at, status):
         self.candidate_id = candidate_id
-        self.trial_id = trial_id  # ✅ FIX
+        self.trial_id = trial_id  
         self.match_score = match_score
         self.match_reason = match_reason
         self.created_at = created_at
