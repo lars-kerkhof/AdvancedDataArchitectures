@@ -1,0 +1,9 @@
+google-adk
+google-cloud-aiplatform
+fastapi
+uvicorn
+requests
+python-dotenv
+mcp
+
+
