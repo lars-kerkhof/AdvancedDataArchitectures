@@ -4,3 +4,4 @@ sqlalchemy
 sqlalchemy-utils
 pydantic>=2.0
 sqlalchemy-bigquery
+requests
