@@ -14,7 +14,8 @@ def match_candidate(candidate_id: str) -> dict:
         result = calculate_match_score(candidate, trial)
         matches.append(result)
 
-    matches = sorted(matches, key=lambda x: x["score"], reverse=True)
+    # FIX: use match_score instead of score
+    matches = sorted(matches, key=lambda x: x["match_score"], reverse=True)
 
     return {
         "candidate_id": candidate_id,
