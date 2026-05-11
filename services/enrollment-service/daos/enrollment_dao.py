@@ -11,7 +11,8 @@ class EnrollmentDAO(Base):
     id = Column(Integer, primary_key=True)
     candidate_id = Column(String)
     trial_id = Column(String)
-    screening_result_id = Column(String)
+    match_score = Column(Integer)
+    match_reason = Column(String)
     created_at = Column(DateTime)
 
     status_id = Column(Integer, ForeignKey("status.id"))
@@ -20,10 +21,10 @@ class EnrollmentDAO(Base):
         backref=backref("enrollment", uselist=False, cascade="all, delete")
     )
 
-    def __init__(self, id, candidate_id, trial_id, screening_result_id, created_at, status):
-        self.id = id
+    def __init__(self, candidate_id, trial_id, match_score, match_reason, created_at, status):
         self.candidate_id = candidate_id
         self.trial_id = trial_id
-        self.screening_result_id = screening_result_id
+        self.match_score = match_score
+        self.match_reason = match_reason
         self.created_at = created_at
         self.status = status
