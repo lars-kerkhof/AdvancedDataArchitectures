@@ -37,6 +37,7 @@ def calculate_match_score(candidate: dict, trial: dict) -> dict:
     score = 0
     reasons = []
 
+    # Map internal IDs → external contract
     candidate_id = candidate.get("id")
     trial_id = trial.get("id")
 
@@ -54,7 +55,7 @@ def calculate_match_score(candidate: dict, trial: dict) -> dict:
             score += 20
             reasons.append("Same country/site region")
 
-    # Age calculation from date_of_birth
+    # Age from date_of_birth
     age = calculate_age(candidate.get("date_of_birth"))
 
     if age is not None and trial.get("min_age") is not None and trial.get("max_age") is not None:
