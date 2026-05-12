@@ -57,5 +57,5 @@ match_and_enroll_subprocess:
             - handle_rejection:
                 return: ${"Candidate " + string(candidate_id) + " registered but no suitable trial match found."}
     - return_enrollment_success:
-        # De fix: de hele expressie staat nu tussen enkele quotes om parsing errors te voorkomen
-        return: '${"Candidate " + string(candidate_id) + " successfully matched and enrolled! Details: " + string(coord_res.body)}'
+        # We gebruiken json.encode om het object veilig om te zetten naar tekst
+        return: ${"Candidate " + string(candidate_id) + " successfully matched and enrolled! Details: " + json.encode_to_string(coord_res.body)}
