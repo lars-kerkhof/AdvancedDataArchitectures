@@ -16,12 +16,13 @@ class TrialDAO(Base):
     min_age = Column(Integer, nullable=False)
     max_age = Column(Integer, nullable=False)
     condition = Column(String, nullable=False)
+    country = Column(String, nullable=True)
     sponsor = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __init__(self, id, title, status, inclusion_criteria_text, exclusion_criteria_text,
-                 min_age, max_age, condition, sponsor=None):
+                 min_age, max_age, condition, country=None, sponsor=None):
         self.id = id
         self.title = title
         self.status = status
@@ -30,4 +31,5 @@ class TrialDAO(Base):
         self.min_age = min_age
         self.max_age = max_age
         self.condition = condition
+        self.country = country
         self.sponsor = sponsor
