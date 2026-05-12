@@ -6,7 +6,7 @@ from db import Base
 
 
 class EnrollmentDAO(Base):
-    __tablename__ = "enrollment"
+    __tablename__ = "enrollments"
 
     id = Column(Integer, primary_key=True)
     candidate_id = Column(String, nullable=False)
