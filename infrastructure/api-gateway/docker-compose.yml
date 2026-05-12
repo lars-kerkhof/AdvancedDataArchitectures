@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  apigateway:
+    image: devopsfaith/krakend:2.7
+    container_name: apigateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./krakend.json:/etc/krakend/krakend.json:ro
+    command: ["run", "-d", "-c", "/etc/krakend/krakend.json"]
