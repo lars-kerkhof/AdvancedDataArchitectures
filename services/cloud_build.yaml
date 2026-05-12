@@ -122,4 +122,43 @@ options:
         "DB_URL=bigquery://$PROJECT_ID/trial_catalog_db,IAM_URL=https://iam-service-118369890374.us-central1.run.app"
       ]
 
+
+    # --- Matching Agent: build image ---
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/matching-agent:0.0.1",
+        "./services/matching-agent"
+      ]
+
+  # --- Matching Agent: push image ---
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "push",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/matching-agent:0.0.1"
+      ]
+
+  # --- Matching Agent: deploy to Cloud Run ---
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "matching-agent",
+        "--image",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/matching-agent:0.0.1",
+        "--region",
+        "${_LOCATION}",
+        "--platform",
+        "managed",
+        "--port",
+        "8080",
+        "--allow-unauthenticated",
+        "--set-env-vars",
+        "CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,TRIAL_SERVICE_URL=https://trial-catalog-service-118369890374.us-central1.run.app,APP_NAME=clinical_trial_matching,AGENT_USER_ID=api_user"
+      ]
   
