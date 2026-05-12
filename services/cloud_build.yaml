@@ -41,4 +41,44 @@ steps:
 options:
   logging: CLOUD_LOGGING_ONLY
 
+
+    # --- Candidate Intake Service: build image ---
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/candidate-intake-service:0.0.1",
+        "./services/candidate-intake-service"
+      ]
+
+  # --- Candidate Intake Service: push image ---
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "push",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/candidate-intake-service:0.0.1"
+      ]
+
+  # --- Candidate Intake Service: deploy to Cloud Run ---
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "candidate-intake-service",
+        "--image",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/candidate-intake-service:0.0.1",
+        "--region",
+        "${_LOCATION}",
+        "--platform",
+        "managed",
+        "--port",
+        "5000",
+        "--allow-unauthenticated",
+        "--set-env-vars",
+        "DB_URL=bigquery://$PROJECT_ID/candidate_intake_db,IAM_URL=https://iam-service-118369890374.us-central1.run.app"
+      ]
+
   
