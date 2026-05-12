@@ -35,6 +35,7 @@ def _to_response(dao: CandidateDAO) -> dict:
         preferred_language=dao.preferred_language,
         outreach_state=dao.outreach_state,
         recruitment_status=dao.recruitment_status,
+        enrolled=dao.enrolled,
         intake_submitted_at=dao.intake_submitted_at,
         last_intake_update_at=dao.last_intake_update_at,
         created_at=dao.created_at,
