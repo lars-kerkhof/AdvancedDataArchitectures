@@ -302,29 +302,6 @@
           "group": "available_trials"
         }
       ]
-    },
-    {
-      "endpoint": "/__health",
-      "method": "GET",
-      "backend": [
-        {
-          "url_pattern": "/",
-          "host": [
-            "http://localhost:8080"
-          ]
-        }
-      ],
-      "extra_config": {
-        "proxy": {
-          "static": {
-            "data": {
-              "status": "ok",
-              "gateway": "online"
-            },
-            "strategy": "always"
-          }
-        }
-      }
     }
   ]
 }
