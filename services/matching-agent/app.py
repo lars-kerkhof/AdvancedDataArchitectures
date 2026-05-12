@@ -1,6 +1,5 @@
 import json
 import os
-
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException
 from google.adk.runners import Runner
@@ -22,11 +21,9 @@ runner = Runner(
     session_service=session_service,
 )
 
-
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "matching-agent"}
-
 
 @app.post("/match/{candidate_id}")
 async def match(candidate_id: str, _user=Depends(require_user)):
@@ -67,7 +64,14 @@ async def match(candidate_id: str, _user=Depends(require_user)):
         )
 
     try:
-        parsed_response = json.loads(final_response)
+        # OPSCHONING: Verwijder Markdown-blokken die Gemini soms toevoegt
+        cleaned_json = final_response.strip()
+        if cleaned_json.startswith("```json"):
+            cleaned_json = cleaned_json.replace("```json", "", 1)
+        if cleaned_json.endswith("```"):
+            cleaned_json = cleaned_json.rsplit("```", 1)[0]
+        
+        parsed_response = json.loads(cleaned_json.strip())
     except json.JSONDecodeError:
         raise HTTPException(
             status_code=500,
@@ -79,9 +83,10 @@ async def match(candidate_id: str, _user=Depends(require_user)):
 
     matches = parsed_response.get("matches", [])
 
+    # Sorteren op match_score (hoogste eerst)
     matches = sorted(
         matches,
-        key=lambda match: match.get("match_score", 0),
+        key=lambda m: m.get("match_score", 0),
         reverse=True,
     )
 
@@ -90,7 +95,6 @@ async def match(candidate_id: str, _user=Depends(require_user)):
         "agent": "matching_agent",
         "matches": matches,
     }
-
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8080))
