@@ -1,6 +1,9 @@
 import os
 import requests
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
+
+from auth import require_user
+from service_token import auth_header, get_service_token
 from tools import call_matching_agent
 
 ENROLLMENT_SERVICE_URL = os.environ.get("ENROLLMENT_SERVICE_URL", "")
@@ -28,17 +31,18 @@ def create_enrollment(best_match: dict) -> dict:
         "status": "matched"
     }
 
-    response = requests.post(
-        f"{ENROLLMENT_SERVICE_URL}/enrollments",
-        json=enrollment_payload
-    )
+    url = f"{ENROLLMENT_SERVICE_URL}/enrollments"
+    response = requests.post(url, json=enrollment_payload, headers=auth_header(), timeout=15)
+    if response.status_code == 401:
+        get_service_token(force_refresh=True)
+        response = requests.post(url, json=enrollment_payload, headers=auth_header(), timeout=15)
     response.raise_for_status()
 
     return response.json()
 
 
 @app.post("/coordinate/match/{candidate_id}")
-def coordinate_match(candidate_id: str):
+def coordinate_match(candidate_id: str, _user=Depends(require_user)):
     matching_result = call_matching_agent(candidate_id)
 
     matches = matching_result.get("matches", [])
@@ -49,7 +53,18 @@ def coordinate_match(candidate_id: str):
             detail=f"No trial matches found for candidate {candidate_id}"
         )
 
+    # Minimum 50 — that's the score the matching agent gives for a condition
+    # match, which is the only signal that the trial is actually relevant to
+    # the candidate. Country and age alone (20+30) shouldn't trigger enrollment.
+    MIN_MATCH_SCORE = 50
+
     best_match = matches[0]
+    if best_match.get("match_score", 0) < MIN_MATCH_SCORE:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No suitable trial match for candidate {candidate_id}"
+        )
+
     enrollment_result = create_enrollment(best_match)
 
     return {
@@ -59,10 +74,3 @@ def coordinate_match(candidate_id: str):
         "selected_match": best_match,
         "enrollment": enrollment_result
     }
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    port = int(os.environ.get("PORT", 8080))
-    uvicorn.run("app:app", host="0.0.0.0", port=port)
