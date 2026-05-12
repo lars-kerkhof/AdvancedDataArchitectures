@@ -2,21 +2,31 @@ import os
 import requests
 from datetime import date
 
+from service_token import auth_header, get_service_token
+
 
 CANDIDATE_SERVICE_URL = os.environ.get("CANDIDATE_SERVICE_URL")
 TRIAL_SERVICE_URL = os.environ.get("TRIAL_SERVICE_URL")
 
 
-def get_candidate_profile(candidate_id: str) -> dict:
-    response = requests.get(f"{CANDIDATE_SERVICE_URL}/candidates/{candidate_id}")
+def _get_with_service_token(url: str) -> requests.Response:
+    response = requests.get(url, headers=auth_header(), timeout=10)
+    if response.status_code == 401:
+        # Token may be stale (clock skew / IAM restart). Force-refresh once.
+        get_service_token(force_refresh=True)
+        response = requests.get(url, headers=auth_header(), timeout=10)
     response.raise_for_status()
-    return response.json()
+    return response
+
+
+def get_candidate_profile(candidate_id: str) -> dict:
+    return _get_with_service_token(
+        f"{CANDIDATE_SERVICE_URL}/candidates/{candidate_id}"
+    ).json()
 
 
 def get_trial_catalog() -> list[dict]:
-    response = requests.get(f"{TRIAL_SERVICE_URL}/trials")
-    response.raise_for_status()
-    return response.json()
+    return _get_with_service_token(f"{TRIAL_SERVICE_URL}/trials").json()
 
 
 def calculate_age(date_of_birth: str) -> int | None:
