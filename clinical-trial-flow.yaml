@@ -1,4 +1,5 @@
 # Clinical Trial Orchestration Process
+# Gebaseerd op Lab 5 patronen: params, assign, sub-workflows en error handling [cite: 112, 136, 167]
 main:
   params: [args]
   steps:
@@ -28,12 +29,13 @@ main:
             country: ${args.country}
             conditions: ${args.conditions}
             date_of_birth: "1980-01-01"
-            sex: "unknown"
+            # Gefixeerd op basis van de 422 error logs:
+            sex: "female" 
+            email: ${"workflow_" + string(int(now())) + "@example.com"} 
         result: candidate_result
 
     - check_matching_eligibility:
-        # We gebruiken een sub-workflow voor het matchingsproces, 
-        # vergelijkbaar met 'accept_order_subprocess' uit het lab.
+        # Sub-workflow aanroep vergelijkbaar met accept_order_subprocess 
         call: match_and_enroll_subprocess
         args:
           candidate_id: ${candidate_result.body.id}
@@ -44,7 +46,7 @@ main:
     - return_final_message:
         return: ${execution_outcome}
 
-# Sub-workflow voor coördinatie (vergelijkbaar met accept_order_subprocess)
+# Sub-workflow voor coördinatie en matching
 match_and_enroll_subprocess:
   params: [candidate_id, auth_token, gateway_url]
   steps:
@@ -62,6 +64,7 @@ match_and_enroll_subprocess:
           as: e
           steps:
             - handle_rejection:
+                # Vangt de 404/500 op als de score te laag is (MIN_MATCH_SCORE)
                 return: ${"Candidate " + string(candidate_id) + " registered but no suitable trial match found (Score < 50)."}
     
     - return_enrollment_success:
