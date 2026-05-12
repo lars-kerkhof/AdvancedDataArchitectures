@@ -1,283 +1,123 @@
 steps:
-  # --- IAM Service: build image ---
+  # --- IAM Service ---
   - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "build",
-        "-t",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/iam-service:0.0.1",
-        "./iam-service"
-      ]
+    args: ["build", "-t", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/iam-service:0.0.1", "./services/iam-service"]
 
-  # --- IAM Service: push image ---
   - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "push",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/iam-service:0.0.1"
-      ]
+    args: ["push", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/iam-service:0.0.1"]
 
-  # --- IAM Service: deploy to Cloud Run ---
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
     args:
       [
-        "run",
-        "deploy",
-        "iam-service",
-        "--image",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/iam-service:0.0.1",
-        "--region",
-        "${_LOCATION}",
-        "--platform",
-        "managed",
-        "--port",
-        "5000",
+        "run", "deploy", "iam-service",
+        "--image", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/iam-service:0.0.1",
+        "--region", "${_LOCATION}",
+        "--platform", "managed",
+        "--port", "5000",
         "--allow-unauthenticated",
-        "--set-env-vars",
-        "DB_URL=bigquery://$PROJECT_ID/iam_db,SECRET_KEY=key.txt"
+        "--set-env-vars", "DB_URL=bigquery://$PROJECT_ID/iam_db,SECRET_KEY=key.txt"
+      ]
+
+  # --- Candidate Intake Service ---
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/candidate-intake-service:0.0.1", "./services/candidate-intake-service"]
+
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/candidate-intake-service:0.0.1"]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run", "deploy", "candidate-intake-service",
+        "--image", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/candidate-intake-service:0.0.1",
+        "--region", "${_LOCATION}",
+        "--platform", "managed",
+        "--port", "5000",
+        "--allow-unauthenticated",
+        "--set-env-vars", "DB_URL=bigquery://$PROJECT_ID/candidate_intake_db,IAM_URL=https://iam-service-118369890374.us-central1.run.app"
+      ]
+
+  # --- Trial Catalog Service ---
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/trial-catalog-service:0.0.1", "./services/trial-catalog-service"]
+
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/trial-catalog-service:0.0.1"]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run", "deploy", "trial-catalog-service",
+        "--image", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/trial-catalog-service:0.0.1",
+        "--region", "${_LOCATION}",
+        "--platform", "managed",
+        "--port", "5000",
+        "--allow-unauthenticated",
+        "--set-env-vars", "DB_URL=bigquery://$PROJECT_ID/trial_catalog_db,IAM_URL=https://iam-service-118369890374.us-central1.run.app"
+      ]
+
+  # --- Enrollment Service ---
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/enrollment-service:0.0.1", "./services/enrollment-service"]
+
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/enrollment-service:0.0.1"]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run", "deploy", "enrollment-service",
+        "--image", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/enrollment-service:0.0.1",
+        "--region", "${_LOCATION}",
+        "--platform", "managed",
+        "--port", "5000",
+        "--allow-unauthenticated",
+        "--set-env-vars", "DB_URL=bigquery://$PROJECT_ID/enrollment_db"
+      ]
+
+  # --- Matching Agent ---
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/matching-agent:0.0.1", "./services/matching-agent"]
+
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/matching-agent:0.0.1"]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run", "deploy", "matching-agent",
+        "--image", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/matching-agent:0.0.1",
+        "--region", "${_LOCATION}",
+        "--platform", "managed",
+        "--port", "8080",
+        "--allow-unauthenticated",
+        "--set-env-vars", "CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,TRIAL_SERVICE_URL=https://trial-catalog-service-118369890374.us-central1.run.app,APP_NAME=clinical_trial_matching,AGENT_USER_ID=api_user"
+      ]
+
+  # --- Coordinator Agent ---
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/coordinator-agent:0.0.1", "./services/coordinator-agent"]
+
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/coordinator-agent:0.0.1"]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run", "deploy", "coordinator-agent",
+        "--image", "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/coordinator-agent:0.0.1",
+        "--region", "${_LOCATION}",
+        "--platform", "managed",
+        "--port", "8080",
+        "--allow-unauthenticated",
+        "--set-env-vars", "MATCHING_AGENT_URL=https://matching-agent-118369890374.us-central1.run.app,CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,ENROLLMENT_SERVICE_URL=https://enrollment-service-118369890374.us-central1.run.app,MIN_MATCH_SCORE=50"
       ]
 
 options:
   logging: CLOUD_LOGGING_ONLY
-
-
-    # --- Candidate Intake Service: build image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "build",
-        "-t",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/candidate-intake-service:0.0.1",
-        "./services/candidate-intake-service"
-      ]
-
-  # --- Candidate Intake Service: push image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "push",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/candidate-intake-service:0.0.1"
-      ]
-
-  # --- Candidate Intake Service: deploy to Cloud Run ---
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: gcloud
-    args:
-      [
-        "run",
-        "deploy",
-        "candidate-intake-service",
-        "--image",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/candidate-intake-service:0.0.1",
-        "--region",
-        "${_LOCATION}",
-        "--platform",
-        "managed",
-        "--port",
-        "5000",
-        "--allow-unauthenticated",
-        "--set-env-vars",
-        "DB_URL=bigquery://$PROJECT_ID/candidate_intake_db,IAM_URL=https://iam-service-118369890374.us-central1.run.app"
-      ]
-
-
-
-      # --- Trial Catalog Service: build image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "build",
-        "-t",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/trial-catalog-service:0.0.1",
-        "./services/trial-catalog-service"
-      ]
-
-  # --- Trial Catalog Service: push image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "push",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/trial-catalog-service:0.0.1"
-      ]
-
-  # --- Trial Catalog Service: deploy to Cloud Run ---
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: gcloud
-    args:
-      [
-        "run",
-        "deploy",
-        "trial-catalog-service",
-        "--image",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/trial-catalog-service:0.0.1",
-        "--region",
-        "${_LOCATION}",
-        "--platform",
-        "managed",
-        "--port",
-        "5000",
-        "--allow-unauthenticated",
-        "--set-env-vars",
-        "DB_URL=bigquery://$PROJECT_ID/trial_catalog_db,IAM_URL=https://iam-service-118369890374.us-central1.run.app"
-      ]
-
-
-    # --- Matching Agent: build image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "build",
-        "-t",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/matching-agent:0.0.1",
-        "./services/matching-agent"
-      ]
-
-  # --- Matching Agent: push image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "push",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/matching-agent:0.0.1"
-      ]
-
-  # --- Matching Agent: deploy to Cloud Run ---
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: gcloud
-    args:
-      [
-        "run",
-        "deploy",
-        "matching-agent",
-        "--image",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/matching-agent:0.0.1",
-        "--region",
-        "${_LOCATION}",
-        "--platform",
-        "managed",
-        "--port",
-        "8080",
-        "--allow-unauthenticated",
-        "--set-env-vars",
-        "CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,TRIAL_SERVICE_URL=https://trial-catalog-service-118369890374.us-central1.run.app,APP_NAME=clinical_trial_matching,AGENT_USER_ID=api_user"
-      ]
-
-
-      # --- Coordinator Agent: build image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "build",
-        "-t",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/coordinator-agent:0.0.1",
-        "./services/coordinator-agent"
-      ]
-
-  # --- Coordinator Agent: push image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "push",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/coordinator-agent:0.0.1"
-      ]
-
-  # --- Coordinator Agent: deploy to Cloud Run ---
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: gcloud
-    args:
-      [
-        "run",
-        "deploy",
-        "coordinator-agent",
-        "--image",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/coordinator-agent:0.0.1",
-        "--region",
-        "${_LOCATION}",
-        "--platform",
-        "managed",
-        "--port",
-        "8080",
-        "--allow-unauthenticated",
-        "--set-env-vars",
-        "MATCHING_AGENT_URL=https://matching-agent-118369890374.us-central1.run.app,CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,ENROLLMENT_SERVICE_URL=https://enrollment-service-118369890374.us-central1.run.app,MIN_MATCH_SCORE=50"
-      ]
-
-
-      # --- Coordinator Agent: build image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "build",
-        "-t",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/coordinator-agent:0.0.1",
-        "./services/coordinator-agent"
-      ]
-
-  # --- Coordinator Agent: push image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "push",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/coordinator-agent:0.0.1"
-      ]
-
-  # --- Coordinator Agent: deploy to Cloud Run ---
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: gcloud
-    args:
-      [
-        "run",
-        "deploy",
-        "coordinator-agent",
-        "--image",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/coordinator-agent:0.0.1",
-        "--region",
-        "${_LOCATION}",
-        "--platform",
-        "managed",
-        "--port",
-        "8080",
-        "--allow-unauthenticated",
-        "--set-env-vars",
-        "MATCHING_AGENT_URL=https://matching-agent-118369890374.us-central1.run.app,CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,MIN_MATCH_SCORE=50"
-      ]
-
-
-    # --- Enrollment Service: build image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "build",
-        "-t",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/enrollment-service:0.0.1",
-        "./services/enrollment-service"
-      ]
-
-  # --- Enrollment Service: push image ---
-  - name: gcr.io/cloud-builders/docker
-    args:
-      [
-        "push",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/enrollment-service:0.0.1"
-      ]
-
-  # --- Enrollment Service: deploy to Cloud Run ---
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: gcloud
-    args:
-      [
-        "run",
-        "deploy",
-        "enrollment-service",
-        "--image",
-        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/enrollment-service:0.0.1",
-        "--region",
-        "${_LOCATION}",
-        "--platform",
-        "managed",
-        "--port",
-        "5000",
-        "--allow-unauthenticated",
-        "--set-env-vars",
-        "DB_URL=bigquery://$PROJECT_ID/enrollment_db"
-      ]
