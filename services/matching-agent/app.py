@@ -1,9 +1,26 @@
+import json
 import os
-from fastapi import Depends, FastAPI
-from auth import require_user
-from mcp_server import match_candidate
 
-app = FastAPI()
+import uvicorn
+from fastapi import Depends, FastAPI, HTTPException
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types
+
+from auth import require_user
+from agent import matching_agent
+
+app = FastAPI(title="Matching Agent", version="0.1.0")
+
+APP_NAME = os.getenv("APP_NAME", "clinical_trial_matching")
+USER_ID = os.getenv("AGENT_USER_ID", "api_user")
+
+session_service = InMemorySessionService()
+runner = Runner(
+    agent=matching_agent,
+    app_name=APP_NAME,
+    session_service=session_service,
+)
 
 
 @app.get("/health")
@@ -12,5 +29,69 @@ def health():
 
 
 @app.post("/match/{candidate_id}")
-def match(candidate_id: str, _user=Depends(require_user)):
-    return match_candidate(candidate_id)
+async def match(candidate_id: str, _user=Depends(require_user)):
+    session_id = f"match-{candidate_id}"
+
+    await session_service.create_session(
+        app_name=APP_NAME,
+        user_id=USER_ID,
+        session_id=session_id,
+    )
+
+    message = types.Content(
+        role="user",
+        parts=[
+            types.Part(
+                text=(
+                    f"Match candidate {candidate_id} to suitable clinical trials. "
+                    "Return only valid JSON with a matches array."
+                )
+            )
+        ],
+    )
+
+    final_response = None
+
+    async for event in runner.run_async(
+        user_id=USER_ID,
+        session_id=session_id,
+        new_message=message,
+    ):
+        if event.is_final_response():
+            final_response = event.content.parts[0].text
+
+    if not final_response:
+        raise HTTPException(
+            status_code=500,
+            detail="Matching agent produced no response",
+        )
+
+    try:
+        parsed_response = json.loads(final_response)
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Matching agent did not return valid JSON",
+                "raw_response": final_response,
+            },
+        )
+
+    matches = parsed_response.get("matches", [])
+
+    matches = sorted(
+        matches,
+        key=lambda match: match.get("match_score", 0),
+        reverse=True,
+    )
+
+    return {
+        "candidate_id": candidate_id,
+        "agent": "matching_agent",
+        "matches": matches,
+    }
+
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8080))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
