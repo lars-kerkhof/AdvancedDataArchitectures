@@ -31,6 +31,7 @@ class CandidateDAO(Base):
     # State
     outreach_state = Column(String, default="not_contacted")
     recruitment_status = Column(String, default="submitted")
+    enrolled = Column(Boolean, nullable=False, default=False)
 
     # Audit
     intake_submitted_at = Column(DateTime, default=datetime.utcnow)
