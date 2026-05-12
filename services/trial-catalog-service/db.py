@@ -10,8 +10,9 @@ if 'DB_URL' in os.environ:
 else:
     db_url = 'sqlite:///trial_catalog.db'
 engine = create_engine(db_url)
-if not database_exists(engine.url):
-    create_database(engine.url)
-print(database_exists(engine.url))
-Session = sessionmaker(bind=engine)
-Base = declarative_base()
+
+# Only run database existence checks for non-BigQuery DBs
+if not db_url.startswith("bigquery://"):
+    if not database_exists(engine.url):
+        create_database(engine.url)
+    print(database_exists(engine.url))
