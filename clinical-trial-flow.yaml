@@ -7,14 +7,12 @@ main:
           - admin_creds:
               email: "demo@example.com"
               password: "demopass123"
-
     - authenticate:
         call: http.post
         args:
           url: ${gateway_url + "/auth/login"}
           body: ${admin_creds}
         result: login_result
-
     - register_candidate:
         call: http.post
         args:
@@ -25,18 +23,17 @@ main:
           body:
             full_name: ${args.full_name}
             email: ${args.email}
-            phone: ${default(args.phone, null)}
+            phone: ${args.phone}
             date_of_birth: ${args.date_of_birth}
             sex: ${args.sex}
             country: ${args.country}
-            conditions: ${default(args.conditions, [])}
-            medications: ${default(args.medications, [])}
-            allergies: ${default(args.allergies, [])}
-            contact_email_opt_in: ${default(args.contact_email_opt_in, true)}
-            contact_phone_opt_in: ${default(args.contact_phone_opt_in, false)}
-            preferred_language: ${default(args.preferred_language, "en")}
+            conditions: ${args.conditions}
+            medications: ${args.medications}
+            allergies: ${args.allergies}
+            contact_email_opt_in: ${args.contact_email_opt_in}
+            contact_phone_opt_in: ${args.contact_phone_opt_in}
+            preferred_language: ${args.preferred_language}
         result: candidate_result
-
     - check_matching_eligibility:
         call: match_and_enroll_subprocess
         args:
@@ -44,7 +41,6 @@ main:
           auth_token: ${login_result.body.auth_token}
           gateway_url: ${gateway_url}
         result: execution_outcome
-
     - return_final_message:
         return: ${execution_outcome}
 
@@ -65,6 +61,7 @@ match_and_enroll_subprocess:
           as: e
           steps:
             - handle_rejection:
-                return: ${"Candidate " + string(candidate_id) + " registered but no suitable trial match found."}
+                # DEBUG: Geeft de volledige error terug in plaats van een standaardtekst
+                return: ${e}
     - return_enrollment_success:
         return: '${"Candidate " + string(candidate_id) + " successfully matched and enrolled! Details: " + json.encode_to_string(coord_res.body)}'
