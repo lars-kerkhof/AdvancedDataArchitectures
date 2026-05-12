@@ -57,5 +57,5 @@ match_and_enroll_subprocess:
             - handle_rejection:
                 return: ${"Candidate " + string(candidate_id) + " registered but no suitable trial match found."}
     - return_enrollment_success:
-        # We gebruiken json.encode om het object veilig om te zetten naar tekst
-        return: ${"Candidate " + string(candidate_id) + " successfully matched and enrolled! Details: " + json.encode_to_string(coord_res.body)}
+        # Hier gebruiken we de door gcloud voorgestelde oplossing met single quotes
+        return: '${"Candidate " + string(candidate_id) + " successfully matched and enrolled! Details: " + json.encode_to_string(coord_res.body)}'
