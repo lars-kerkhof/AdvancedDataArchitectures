@@ -43,7 +43,8 @@ class CandidateDAO(Base):
                  phone=None,
                  conditions="[]", medications="[]", allergies="[]",
                  contact_email_opt_in=True, contact_phone_opt_in=False,
-                 preferred_language="en"):
+                 preferred_language="en",
+                 enrolled=False):
         self.id = id
         self.full_name = full_name
         self.email = email
@@ -56,4 +57,5 @@ class CandidateDAO(Base):
         self.allergies = allergies
         self.contact_email_opt_in = contact_email_opt_in
         self.contact_phone_opt_in = contact_phone_opt_in
+        self.enrolled = enrolled
         self.preferred_language = preferred_language
