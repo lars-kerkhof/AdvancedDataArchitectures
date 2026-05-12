@@ -21,4 +21,5 @@ class TrialReq(BaseModel):
     min_age: int = Field(ge=0, le=120)
     max_age: int = Field(ge=0, le=120)
     condition: str
+    country: Optional[str] = None
     sponsor: Optional[str] = None
