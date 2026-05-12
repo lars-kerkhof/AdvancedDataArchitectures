@@ -50,18 +50,15 @@ def calculate_match_score(candidate: dict, trial: dict) -> dict:
     candidate_conditions = [c.lower() for c in candidate.get("conditions", [])]
     trial_condition = trial.get("condition", "").lower()
 
-    # Gebruik een flexibele check: zit de trial-conditie in de lijst van de kandidaat?
     if trial_condition and any(trial_condition in c or c in trial_condition for c in candidate_conditions):
         score += 50
         reasons.append(f"Condition match: {trial_condition}")
 
-    # Land match (we laten de check staan, maar deze geeft nu 0 punten omdat de kolom mist)
     if candidate.get("country") and trial.get("country"):
         if candidate.get("country") == trial.get("country"):
             score += 20
             reasons.append("Same country/site region")
 
-    # Leeftijd match (John is ~41, wat tussen 18-65 valt)
     age = calculate_age(candidate.get("date_of_birth"))
     if age is not None and trial.get("min_age") is not None and trial.get("max_age") is not None:
         if trial["min_age"] <= age <= trial["max_age"]:
