@@ -81,4 +81,45 @@ options:
         "DB_URL=bigquery://$PROJECT_ID/candidate_intake_db,IAM_URL=https://iam-service-118369890374.us-central1.run.app"
       ]
 
+
+
+      # --- Trial Catalog Service: build image ---
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/trial-catalog-service:0.0.1",
+        "./services/trial-catalog-service"
+      ]
+
+  # --- Trial Catalog Service: push image ---
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "push",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/trial-catalog-service:0.0.1"
+      ]
+
+  # --- Trial Catalog Service: deploy to Cloud Run ---
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "trial-catalog-service",
+        "--image",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/trial-catalog-service:0.0.1",
+        "--region",
+        "${_LOCATION}",
+        "--platform",
+        "managed",
+        "--port",
+        "5000",
+        "--allow-unauthenticated",
+        "--set-env-vars",
+        "DB_URL=bigquery://$PROJECT_ID/trial_catalog_db,IAM_URL=https://iam-service-118369890374.us-central1.run.app"
+      ]
+
   
