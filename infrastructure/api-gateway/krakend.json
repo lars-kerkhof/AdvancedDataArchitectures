@@ -1,0 +1,350 @@
+{
+  "$schema": "https://www.krakend.io/schema/v2.7/krakend.json",
+  "version": 3,
+  "name": "ada-clinical-trial-gateway",
+  "port": 8080,
+  "timeout": "30s",
+  "cache_ttl": "300s",
+  "output_encoding": "json",
+  "extra_config": {
+    "security/cors": {
+      "allow_origins": ["*"],
+      "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "allow_headers": ["Content-Type", "Authorization"],
+      "expose_headers": ["Content-Length"],
+      "max_age": "12h"
+    },
+    "telemetry/logging": {
+      "level": "INFO",
+      "prefix": "[KRAKEND]",
+      "syslog": false,
+      "stdout": true
+    }
+  },
+  "endpoints": [
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "extra_config": {
+        "qos/ratelimit/router": {
+          "max_rate": 30,
+          "client_max_rate": 3,
+          "every": "1m",
+          "strategy": "ip"
+        }
+      },
+      "backend": [
+        {
+          "host": ["https://iam-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/login",
+          "method": "POST",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/register",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "backend": [
+        {
+          "host": ["https://iam-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/register",
+          "method": "POST",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/verify",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "host": ["https://iam-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/verify",
+          "method": "GET",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/trials",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization"],
+      "cache_ttl": "60s",
+      "backend": [
+        {
+          "host": ["https://trial-catalog-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/trials",
+          "method": "GET",
+          "encoding": "no-op",
+          "extra_config": {
+            "qos/http-cache": {
+              "shared": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/trials",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "backend": [
+        {
+          "host": ["https://trial-catalog-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/trials",
+          "method": "POST",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/trials/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "host": ["https://trial-catalog-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/trials/{id}",
+          "method": "GET",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/trials/{id}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "backend": [
+        {
+          "host": ["https://trial-catalog-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/trials/{id}",
+          "method": "PUT",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/trials/{id}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "host": ["https://trial-catalog-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/trials/{id}",
+          "method": "DELETE",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/candidates",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "host": ["https://candidate-intake-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/candidates",
+          "method": "GET",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/candidates",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "backend": [
+        {
+          "host": ["https://candidate-intake-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/candidates",
+          "method": "POST",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/candidates/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "host": ["https://candidate-intake-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/candidates/{id}",
+          "method": "GET",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/candidates/{id}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "backend": [
+        {
+          "host": ["https://candidate-intake-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/candidates/{id}",
+          "method": "PUT",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/enrollments",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "backend": [
+        {
+          "host": ["https://enrollment-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/enrollments",
+          "method": "POST",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/enrollments/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "host": ["https://enrollment-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/enrollments/{id}",
+          "method": "GET",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/enrollments/{id}/status",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "backend": [
+        {
+          "host": ["https://enrollment-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/enrollments/{id}/status",
+          "method": "PUT",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/match",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "backend": [
+        {
+          "host": ["https://matching-agent-118369890374.us-central1.run.app"],
+          "url_pattern": "/match",
+          "method": "POST",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/coordinate/match/{candidate_id}",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "backend": [
+        {
+          "host": ["https://coordinator-agent-118369890374.us-central1.run.app"],
+          "url_pattern": "/coordinate/match/{candidate_id}",
+          "method": "POST",
+          "encoding": "no-op",
+          "extra_config": {
+            "qos/circuit-breaker": {
+              "interval": 60,
+              "timeout": 30,
+              "max_errors": 5,
+              "name": "coordinator-cb",
+              "log_status_change": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/dashboard/candidate/{id}",
+      "method": "GET",
+      "output_encoding": "json",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "host": ["https://candidate-intake-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/candidates/{id}",
+          "method": "GET",
+          "group": "candidate"
+        },
+        {
+          "host": ["https://trial-catalog-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/trials",
+          "method": "GET",
+          "group": "available_trials"
+        }
+      ]
+    },
+    {
+      "endpoint": "/__health",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "host": ["https://iam-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/health",
+          "method": "GET",
+          "group": "iam"
+        },
+        {
+          "host": ["https://trial-catalog-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/health",
+          "method": "GET",
+          "group": "trial"
+        },
+        {
+          "host": ["https://candidate-intake-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/health",
+          "method": "GET",
+          "group": "intake"
+        },
+        {
+          "host": ["https://enrollment-service-118369890374.us-central1.run.app"],
+          "url_pattern": "/health",
+          "method": "GET",
+          "group": "enrollment"
+        },
+        {
+          "host": ["https://matching-agent-118369890374.us-central1.run.app"],
+          "url_pattern": "/health",
+          "method": "GET",
+          "group": "matching"
+        },
+        {
+          "host": ["https://coordinator-agent-118369890374.us-central1.run.app"],
+          "url_pattern": "/health",
+          "method": "GET",
+          "group": "coordinator"
+        }
+      ]
+    }
+  ]
+}
