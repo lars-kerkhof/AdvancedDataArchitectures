@@ -241,3 +241,43 @@ options:
         "--set-env-vars",
         "MATCHING_AGENT_URL=https://matching-agent-118369890374.us-central1.run.app,CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,MIN_MATCH_SCORE=50"
       ]
+
+
+    # --- Enrollment Service: build image ---
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/enrollment-service:0.0.1",
+        "./services/enrollment-service"
+      ]
+
+  # --- Enrollment Service: push image ---
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "push",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/enrollment-service:0.0.1"
+      ]
+
+  # --- Enrollment Service: deploy to Cloud Run ---
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "enrollment-service",
+        "--image",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/enrollment-service:0.0.1",
+        "--region",
+        "${_LOCATION}",
+        "--platform",
+        "managed",
+        "--port",
+        "5000",
+        "--allow-unauthenticated",
+        "--set-env-vars",
+        "DB_URL=bigquery://$PROJECT_ID/enrollment_db"
+      ]
