@@ -1,0 +1,44 @@
+steps:
+  # --- IAM Service: build image ---
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/iam-service:0.0.1",
+        "./iam-service"
+      ]
+
+  # --- IAM Service: push image ---
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "push",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/iam-service:0.0.1"
+      ]
+
+  # --- IAM Service: deploy to Cloud Run ---
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "iam-service",
+        "--image",
+        "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/iam-service:0.0.1",
+        "--region",
+        "${_LOCATION}",
+        "--platform",
+        "managed",
+        "--port",
+        "5000",
+        "--allow-unauthenticated",
+        "--set-env-vars",
+        "DB_URL=bigquery://$PROJECT_ID/iam_db,SECRET_KEY=key.txt"
+      ]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+  
