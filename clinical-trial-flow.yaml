@@ -1,5 +1,5 @@
 # Clinical Trial Orchestration Process
-# Gebaseerd op Lab 5 patronen: params, assign, sub-workflows en error handling [cite: 112, 136, 167]
+# Gebaseerd op Lab 5 patronen: params, assign, sub-workflows en error handling [cite: 3, 10, 102]
 main:
   params: [args]
   steps:
@@ -11,14 +11,14 @@ main:
               password: "demopass123"
 
     - authenticate:
-        call: http.post
+        [cite_start]call: http.post # Aanroep naar Identity Service via Gateway [cite: 33, 100]
         args:
           url: ${gateway_url + "/auth/login"}
           body: ${admin_creds}
         result: login_result
 
     - register_candidate:
-        call: http.post
+        [cite_start]call: http.post # Aanroep naar Intake Service [cite: 101]
         args:
           url: ${gateway_url + "/candidates"}
           headers:
@@ -29,13 +29,13 @@ main:
             country: ${args.country}
             conditions: ${args.conditions}
             date_of_birth: "1980-01-01"
-            # Gefixeerd op basis van de 422 error logs:
-            sex: "female" 
-            email: ${"workflow_" + string(int(now())) + "@example.com"} 
+            sex: "female" # Gefixeerd op basis van backend validatie (enum)
+            # We gebruiken de ingebouwde unix_timestamp van de execution om email uniek te maken
+            email: ${"wf_" + string(sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")) + "@example.com"} 
         result: candidate_result
 
     - check_matching_eligibility:
-        # Sub-workflow aanroep vergelijkbaar met accept_order_subprocess 
+        # Sub-workflow aanroep conform Lab 5 [cite: 166, 167]
         call: match_and_enroll_subprocess
         args:
           candidate_id: ${candidate_result.body.id}
@@ -46,7 +46,7 @@ main:
     - return_final_message:
         return: ${execution_outcome}
 
-# Sub-workflow voor coördinatie en matching
+# Sub-workflow voor coördinatie (vergelijkbaar met accept_order_subprocess) [cite: 168]
 match_and_enroll_subprocess:
   params: [candidate_id, auth_token, gateway_url]
   steps:
@@ -64,8 +64,8 @@ match_and_enroll_subprocess:
           as: e
           steps:
             - handle_rejection:
-                # Vangt de 404/500 op als de score te laag is (MIN_MATCH_SCORE)
-                return: ${"Candidate " + string(candidate_id) + " registered but no suitable trial match found (Score < 50)."}
+                # Vangt de 404/500 op (Matching Score < 50) [cite: 136, 153]
+                return: ${"Candidate " + string(candidate_id) + " registered but no suitable trial match found."}
     
     - return_enrollment_success:
         return: ${"Candidate " + string(candidate_id) + " successfully matched and enrolled! " + coord_res.body.message}
