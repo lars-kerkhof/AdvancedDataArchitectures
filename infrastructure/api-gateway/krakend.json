@@ -306,45 +306,25 @@
     {
       "endpoint": "/__health",
       "method": "GET",
-      "output_encoding": "json",
       "backend": [
         {
-          "host": ["https://iam-service-118369890374.us-central1.run.app"],
-          "url_pattern": "/health",
-          "method": "GET",
-          "group": "iam"
-        },
-        {
-          "host": ["https://trial-catalog-service-118369890374.us-central1.run.app"],
-          "url_pattern": "/health",
-          "method": "GET",
-          "group": "trial"
-        },
-        {
-          "host": ["https://candidate-intake-service-118369890374.us-central1.run.app"],
-          "url_pattern": "/health",
-          "method": "GET",
-          "group": "intake"
-        },
-        {
-          "host": ["https://enrollment-service-118369890374.us-central1.run.app"],
-          "url_pattern": "/health",
-          "method": "GET",
-          "group": "enrollment"
-        },
-        {
-          "host": ["https://matching-agent-118369890374.us-central1.run.app"],
-          "url_pattern": "/health",
-          "method": "GET",
-          "group": "matching"
-        },
-        {
-          "host": ["https://coordinator-agent-118369890374.us-central1.run.app"],
-          "url_pattern": "/health",
-          "method": "GET",
-          "group": "coordinator"
+          "url_pattern": "/",
+          "host": [
+            "http://localhost:8080"
+          ]
         }
-      ]
+      ],
+      "extra_config": {
+        "proxy": {
+          "static": {
+            "data": {
+              "status": "ok",
+              "gateway": "online"
+            },
+            "strategy": "always"
+          }
+        }
+      }
     }
   ]
 }
