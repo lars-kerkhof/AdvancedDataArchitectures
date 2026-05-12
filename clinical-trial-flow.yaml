@@ -57,4 +57,4 @@ match_and_enroll_subprocess:
             - handle_rejection:
                 return: ${"Candidate " + string(candidate_id) + " registered but no suitable trial match found."}
     - return_enrollment_success:
-        return: ${"Candidate " + string(candidate_id) + " successfully matched and enrolled! " + coord_res.body.message}
+        return: ${"Candidate " + string(candidate_id) + " successfully matched and enrolled! Details: " + string(coord_res.body)}
