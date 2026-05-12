@@ -18,6 +18,7 @@ class TrialRes(BaseModel):
     min_age: int
     max_age: int
     condition: str
+    country: Optional[str] = None
     sponsor: Optional[str] = None
     created_at: datetime
     updated_at: datetime
