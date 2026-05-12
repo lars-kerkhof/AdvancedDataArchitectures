@@ -1,17 +1,14 @@
-# app.py
-
 import os
-
-import uvicorn
-from fastapi import Depends, FastAPI
+import requests
+from fastapi import Depends, FastAPI, HTTPException
 
 from auth import require_user
-from agent import CoordinatorAgent
-from tools import call_matching_agent, update_candidate_enrolled
+from service_token import auth_header, get_service_token
+from tools import call_matching_agent
 
-app = FastAPI(title="Coordinator Agent", version="0.1.0")
+ENROLLMENT_SERVICE_URL = os.environ.get("ENROLLMENT_SERVICE_URL", "")
 
-coordinator = CoordinatorAgent()
+app = FastAPI()
 
 
 @app.get("/health")
@@ -19,31 +16,65 @@ def health():
     return {"status": "ok", "service": "coordinator-agent"}
 
 
+def create_enrollment(best_match: dict) -> dict:
+    if not ENROLLMENT_SERVICE_URL:
+        raise HTTPException(
+            status_code=500,
+            detail="ENROLLMENT_SERVICE_URL environment variable is not set"
+        )
+
+    enrollment_payload = {
+        "candidate_id": best_match["candidate_id"],
+        "trial_id": best_match["trial_id"],
+        "match_score": best_match["match_score"],
+        "match_reason": "; ".join(best_match.get("match_reasons", [])),
+        "status": "matched"
+    }
+
+    url = f"{ENROLLMENT_SERVICE_URL}/enrollments"
+    response = requests.post(url, json=enrollment_payload, headers=auth_header(), timeout=15)
+    if response.status_code == 401:
+        get_service_token(force_refresh=True)
+        response = requests.post(url, json=enrollment_payload, headers=auth_header(), timeout=15)
+    response.raise_for_status()
+
+    return response.json()
+
+
 @app.post("/coordinate/match/{candidate_id}")
 def coordinate_match(candidate_id: str, _user=Depends(require_user)):
     matching_result = call_matching_agent(candidate_id)
+
     matches = matching_result.get("matches", [])
 
-    decision = coordinator.decide_enrollment(
-        candidate_id=candidate_id,
-        matches=matches,
-    )
+    if not matches:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No trial matches found for candidate {candidate_id}"
+        )
 
-    candidate_update = update_candidate_enrolled(
-        candidate_id=candidate_id,
-        enrolled=decision["enrolled"],
-    )
+    MIN_MATCH_SCORE = 50
+
+    best_match = matches[0]
+    if best_match.get("match_score", 0) < MIN_MATCH_SCORE:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No suitable trial match for candidate {candidate_id}"
+        )
+
+    enrollment_result = create_enrollment(best_match)
 
     return {
-        "goal": "coordinate_candidate_matching",
+        "goal": "find_trial_matches_and_create_enrollment",
         "candidate_id": candidate_id,
-        "agent": coordinator.name,
-        "matching_agent_called": True,
-        "decision": decision,
-        "candidate_update": candidate_update,
+        "agent_used": "matching-agent",
+        "selected_match": best_match,
+        "enrollment": enrollment_result
     }
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     port = int(os.environ.get("PORT", 8080))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("app:app", host="0.0.0.0", port=port)
