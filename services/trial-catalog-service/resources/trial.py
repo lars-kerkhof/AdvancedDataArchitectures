@@ -25,6 +25,7 @@ class Trial:
                 min_age=t_req.min_age,
                 max_age=t_req.max_age,
                 condition=t_req.condition,
+                country=t_req.country,
                 sponsor=t_req.sponsor,
             )
             session.add(trial)
@@ -89,6 +90,7 @@ class Trial:
             trial.min_age = t_req.min_age
             trial.max_age = t_req.max_age
             trial.condition = t_req.condition
+            trial.country = t_req.country
             trial.sponsor = t_req.sponsor
             session.commit()
             session.refresh(trial)
