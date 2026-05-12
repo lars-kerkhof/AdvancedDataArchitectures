@@ -1,0 +1,60 @@
+main:
+  params: [args] # Accepts runtime arguments (e.g., candidate details)
+  steps:
+    - init_variables:
+        assign: # Initialize our gateway URL and admin credentials
+          - gateway_url: "https://api-gateway-118369890374.us-central1.run.app"
+          - admin_creds:
+              email: "demo@example.com"
+              password: "demopass123"
+
+    - authenticate_via_gateway:
+        call: http.post # Call the IAM service via the KrakenD Gateway
+        args:
+          url: ${gateway_url + "/auth/login"}
+          body: ${admin_creds}
+        result: login_result
+
+    - register_candidate:
+        call: http.post
+        args:
+          url: ${gateway_url + "/candidates"}
+          headers:
+            Authorization: ${"Bearer " + login_result.body.auth_token}
+            Content-Type: "application/json"
+          body:
+            full_name: ${args.name}
+            country: ${args.country}
+            conditions: ${args.conditions}
+            date_of_birth: "1980-01-01" # Defaulting for workflow simplicity
+            sex: "unknown"
+        result: candidate_result
+
+    - trigger_coordinator_agent:
+        try:
+          call: http.post
+          args:
+            url: ${gateway_url + "/coordinate/match/" + string(candidate_result.body.id)}
+            headers:
+              Authorization: ${"Bearer " + login_result.body.auth_token}
+              Content-Type: "application/json"
+            body: {}
+          result: coordinator_result
+        except:
+          as: e
+          steps:
+            - handle_no_match: # Catching the 404 error if the candidate scores below MIN_MATCH_SCORE
+                assign:
+                  - coordinator_result: {"code": 404}
+
+    - evaluate_outcome:
+        switch: # Conditional jump based on the coordinator's HTTP status code
+          - condition: ${coordinator_result.code == 200 or coordinator_result.code == 201}
+            next: return_success
+        next: return_failure
+
+    - return_success:
+        return: ${"Success! Candidate " + args.name + " (ID: " + string(candidate_result.body.id) + ") was matched and enrolled."}
+
+    - return_failure:
+        return: ${"Notice: Candidate " + args.name + " (ID: " + string(candidate_result.body.id) + ") was registered but did not meet the criteria for any active trials."}
