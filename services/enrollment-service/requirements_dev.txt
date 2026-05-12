@@ -4,3 +4,4 @@ sqlalchemy
 sqlalchemy-utils
 pytest
 sqlalchemy-bigquery
+google-cloud-bigquery
