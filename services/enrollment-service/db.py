@@ -1,18 +1,18 @@
+# db.py
 import os
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy_utils import database_exists, create_database
 
-# The database URL is provided as an env. variable
-if 'DB_URL' in os.environ:
-    db_url = os.environ['DB_URL']
-else:
-    db_url = "sqlite:///enrollment.db"
-engine = create_engine(db_url)
-if not database_exists(engine.url):
-    create_database(engine.url)
-print(database_exists(engine.url))
-# https://docs.sqlalchemy.org/en/21/orm/session_basics.html
+GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "extended-optics-495508-r1")
+BQ_DATASET = os.getenv("BQ_DATASET", "enrollment_db")
+
+DB_URL = os.getenv("DB_URL", f"bigquery://{GCP_PROJECT_ID}/{BQ_DATASET}")
+
+engine = create_engine(
+    DB_URL,
+    location=os.getenv("BQ_LOCATION", "EU"),
+)
+
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
