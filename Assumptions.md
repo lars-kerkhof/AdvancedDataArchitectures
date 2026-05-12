@@ -15,4 +15,4 @@
 * System load is variable but can be handled through independent scaling of services.
 * The absence of a dedicated screening component does not invalidate the core value proposition of the platform.
 
-# End of Assumptions
+
