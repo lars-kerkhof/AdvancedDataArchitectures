@@ -4,7 +4,7 @@
   "phone": "+31612345678",
   "date_of_birth": "1985-06-15",
   "sex": "male",
-  "country": "Netherlands",
+  "country": "NL",
   "conditions": ["diabetes"],
   "medications": ["metformin"],
   "allergies": []
