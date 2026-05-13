@@ -2,6 +2,7 @@ fastapi
 uvicorn
 sqlalchemy
 sqlalchemy-utils
-pydantic>=2.0
 sqlalchemy-bigquery
+google-cloud-bigquery
 requests
+pydantic
