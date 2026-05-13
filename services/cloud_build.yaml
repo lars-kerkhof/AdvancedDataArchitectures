@@ -122,16 +122,7 @@ steps:
       # --- Deploy Google Workflow ---
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
-    args:
-      [
-        "workflows",
-        "deploy",
-        "clinical-trial-flow",
-        "--source",
-        "./clinical-trial-flow.yaml",
-        "--location",
-        "${_LOCATION}"
-      ]
+    args: ["workflows","deploy","clinical-trial-flow","--source","./clinical-trial-flow.yaml","--location","${_LOCATION}"]
 
 options:
   logging: CLOUD_LOGGING_ONLY
