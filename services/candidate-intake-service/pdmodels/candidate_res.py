@@ -36,4 +36,4 @@ class RecruitmentStatusRes(BaseModel):
     """Lightweight response for GET /candidates/{id}/recruitment-status."""
     id: str
     recruitment_status: RecruitmentStatusEnum
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
