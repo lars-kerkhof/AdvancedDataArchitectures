@@ -3,7 +3,7 @@
   "version": 3,
   "name": "ada-clinical-trial-gateway",
   "port": 8080,
-  "timeout": "30s",
+  "timeout": "180s",
   "cache_ttl": "300s",
   "output_encoding": "json",
   "extra_config": {
