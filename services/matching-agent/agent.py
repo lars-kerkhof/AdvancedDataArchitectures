@@ -11,7 +11,7 @@ load_dotenv()
 
 matching_agent = Agent(
     name="matching_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description="Matches clinical trial candidates to suitable trials.",
     instruction="""
 You are the Matching Agent in a clinical trial recruitment platform.
