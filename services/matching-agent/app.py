@@ -80,11 +80,44 @@ async def match(candidate_id: str, _user=Depends(require_user)):
         except Exception:
             pass
 
-    # VERANDERING 1: Geen 500-error meer als de agent geen tekst teruggeeft (bijv. bij een kale function_call)
+    # Veilige fallback: voorkom 500 error als er geen platte tekst is teruggekomen
     if not final_response:
         print(f"Waarschuwing: Geen final_response ontvangen voor {candidate_id}.")
         parsed_response = {"matches": []}
     else:
         cleaned_json = final_response.strip()
-        cleaned_json = re.sub(r"^
-http://googleusercontent.com/immersive_entry_chip/0
+        # Regex fix: gebruikt `{3} in plaats van echte backticks om parsing errors te voorkomen
+        cleaned_json = re.sub(r"^`{3}(?:json)?\s*|\s*`{3}$", "", cleaned_json, flags=re.MULTILINE)
+        match_obj = re.search(r"\{.*\}", cleaned_json, flags=re.DOTALL)
+        if match_obj:
+            cleaned_json = match_obj.group(0)
+
+        # Veilige fallback: voorkom 500 error als JSON corrupt is
+        try:
+            parsed_response = json.loads(cleaned_json)
+        except json.JSONDecodeError as e:
+            print(f"Waarschuwing: JSON parsing mislukt voor {candidate_id}. Error: {e}. Raw: {final_response}")
+            parsed_response = {"matches": []}
+
+    if not isinstance(parsed_response, dict):
+        matches = []
+    else:
+        matches = parsed_response.get("matches", [])
+
+    matches = sorted(
+        matches,
+        key=lambda m: m.get("match_score", 0),
+        reverse=True,
+    )
+
+    return {
+        "candidate_id": candidate_id,
+        "agent": "matching_agent",
+        "matches": matches,
+        "match_score": matches[0].get("match_score", 0) if matches else 0,
+    }
+
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8080))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
