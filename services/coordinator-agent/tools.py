@@ -14,10 +14,10 @@ def call_matching_agent(candidate_id: str):
         }
 
     url = f"{MATCHING_AGENT_URL}/match/{candidate_id}"
-    response = requests.post(url, headers=auth_header(), timeout=30)
+    response = requests.post(url, headers=auth_header(), timeout=60)
     if response.status_code == 401:
         get_service_token(force_refresh=True)
-        response = requests.post(url, headers=auth_header(), timeout=30)
+        response = requests.post(url, headers=auth_header(), timeout=60)
     response.raise_for_status()
 
     return response.json()
@@ -32,11 +32,11 @@ def update_candidate_enrolled(candidate_id: str, enrolled: bool):
     url = f"{CANDIDATE_SERVICE_URL}/candidates/{candidate_id}/recruitment-status"
     payload = {"recruitment_status": "enrolled" if enrolled else "rejected"}
 
-    response = requests.put(url, json=payload, headers=auth_header(), timeout=15)
+    response = requests.put(url, json=payload, headers=auth_header(), timeout=30)
 
     if response.status_code == 401:
         get_service_token(force_refresh=True)
-        response = requests.put(url, json=payload, headers=auth_header(), timeout=15)
+        response = requests.put(url, json=payload, headers=auth_header(), timeout=30)
 
     response.raise_for_status()
     return response.json()
