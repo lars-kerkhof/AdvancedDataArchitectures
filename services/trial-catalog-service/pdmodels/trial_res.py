@@ -20,5 +20,5 @@ class TrialRes(BaseModel):
     condition: str
     country: Optional[str] = None
     sponsor: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
