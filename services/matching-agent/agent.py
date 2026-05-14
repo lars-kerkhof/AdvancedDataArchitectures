@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
-from google.adk.agents import Agent
+from google.adk.agents.llm_agent import LlmAgent
+from google.genai import types
 
 from tools import (
     get_candidate_profile,
@@ -9,7 +10,7 @@ from tools import (
 
 load_dotenv()
 
-matching_agent = Agent(
+matching_agent = LlmAgent(
     name="matching_agent",
     model="gemini-2.5-flash",
     description="Matches clinical trial candidates to suitable trials.",
@@ -45,6 +46,24 @@ Return exactly this structure:
 
 Sort matches by match_score from highest to lowest.
 """,
+    generate_content_config=types.GenerateContentConfig(
+        temperature=0.2,
+        max_output_tokens=1000,
+        safety_settings=[
+            types.SafetySetting(
+                category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold=types.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+            )
+        ],
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(
+                initial_delay=1.0,
+                attempts=10,
+                http_status_codes=[408, 429, 500, 502, 503, 504],
+            ),
+            timeout=120 * 1000,
+        ),
+    ),
     tools=[
         get_candidate_profile,
         get_trial_catalog,
