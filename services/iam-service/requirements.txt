@@ -4,3 +4,4 @@ sqlalchemy
 sqlalchemy-utils
 sqlalchemy-bigquery
 pyjwt
+google-cloud-bigquery-storage
