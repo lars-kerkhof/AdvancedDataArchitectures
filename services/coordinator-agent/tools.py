@@ -14,10 +14,10 @@ def call_matching_agent(candidate_id: str):
         }
 
     url = f"{MATCHING_AGENT_URL}/match/{candidate_id}"
-    response = requests.post(url, headers=auth_header(), timeout=60)
+    response = requests.post(url, headers=auth_header(), timeout=150)
     if response.status_code == 401:
         get_service_token(force_refresh=True)
-        response = requests.post(url, headers=auth_header(), timeout=60)
+        response = requests.post(url, headers=auth_header(), timeout=150)
     response.raise_for_status()
 
     return response.json()
