@@ -10,11 +10,11 @@ TRIAL_SERVICE_URL = os.environ.get("TRIAL_SERVICE_URL")
 
 
 def _get_with_service_token(url: str) -> requests.Response:
-    response = requests.get(url, headers=auth_header(), timeout=10)
+    response = requests.get(url, headers=auth_header(), timeout=30)
     if response.status_code == 401:
         # Token may be stale (clock skew / IAM restart). Force-refresh once.
         get_service_token(force_refresh=True)
-        response = requests.get(url, headers=auth_header(), timeout=10)
+        response = requests.get(url, headers=auth_header(), timeout=30)
     response.raise_for_status()
     return response
 
