@@ -94,6 +94,7 @@ async def match(candidate_id: str, _user=Depends(require_user)):
         "candidate_id": candidate_id,
         "agent": "matching_agent",
         "matches": matches,
+        "match_score": matches[0].get("match_score", 0) if matches else 0
     }
 
 if __name__ == "__main__":
