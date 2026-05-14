@@ -1,0 +1,3 @@
+[submodule "services/coordinator-agent/external/labs"]
+	path = services/coordinator-agent/external/labs
+	url = https://github.com/lars-kerkhof/ADA2026.git
