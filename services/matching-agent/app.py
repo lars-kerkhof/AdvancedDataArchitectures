@@ -1,5 +1,8 @@
 import json
 import os
+import re
+import uuid
+
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException
 from google.adk.runners import Runner
@@ -21,14 +24,21 @@ runner = Runner(
     session_service=session_service,
 )
 
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "matching-agent"}
 
+
 @app.post("/match/{candidate_id}")
 async def match(candidate_id: str, _user=Depends(require_user)):
-    from google.genai.errors import ServerError
-    import asyncio as _asyncio
+    session_id = f"match-{candidate_id}-{uuid.uuid4().hex[:8]}"
+
+    await session_service.create_session(
+        app_name=APP_NAME,
+        user_id=USER_ID,
+        session_id=session_id,
+    )
 
     message = types.Content(
         role="user",
@@ -43,55 +53,47 @@ async def match(candidate_id: str, _user=Depends(require_user)):
     )
 
     final_response = None
-    last_error = None
 
-    for attempt in range(3):
-        session_id = f"match-{candidate_id}-{attempt}"
-        await session_service.create_session(
-            app_name=APP_NAME,
+    try:
+        async for event in runner.run_async(
             user_id=USER_ID,
             session_id=session_id,
-        )
-
-        try:
-            async for event in runner.run_async(
-                user_id=USER_ID,
-                session_id=session_id,
-                new_message=message,
-            ):
+            new_message=message,
+        ):
             if not event.is_final_response():
                 continue
             if not event.content or not event.content.parts:
                 continue
             for part in event.content.parts:
                 if getattr(part, "text", None):
-                final_response = part.text
-                break
+                    final_response = part.text
+                    break
             if final_response:
                 break
-        except ServerError as e:
-            last_error = e
-            if attempt < 2:
-                await _asyncio.sleep(2 * (attempt + 1))  # 2s, 4s
-                continue
-            raise HTTPException(
-                status_code=503,
-                detail=f"Gemini unavailable after retries: {e}",
+    finally:
+        try:
+            await session_service.delete_session(
+                app_name=APP_NAME,
+                user_id=USER_ID,
+                session_id=session_id,
             )
+        except Exception:
+            pass
 
     if not final_response:
         raise HTTPException(
             status_code=500,
-            detail="Matching agent produced no response",
+            detail="Matching agent produced no response (possibly safety-filtered or empty)",
         )
 
+    cleaned_json = final_response.strip()
+    cleaned_json = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned_json, flags=re.MULTILINE)
+    match_obj = re.search(r"\{.*\}", cleaned_json, flags=re.DOTALL)
+    if match_obj:
+        cleaned_json = match_obj.group(0)
+
     try:
-        cleaned_json = final_response.strip()
-        if cleaned_json.startswith("```json"):
-            cleaned_json = cleaned_json.replace("```json", "", 1)
-        if cleaned_json.endswith("```"):
-            cleaned_json = cleaned_json.rsplit("```", 1)[0]
-        parsed_response = json.loads(cleaned_json.strip())
+        parsed_response = json.loads(cleaned_json)
     except json.JSONDecodeError:
         raise HTTPException(
             status_code=500,
@@ -101,8 +103,16 @@ async def match(candidate_id: str, _user=Depends(require_user)):
             },
         )
 
-    matches = parsed_response.get("matches", [])
-    matches = sorted(matches, key=lambda m: m.get("match_score", 0), reverse=True)
+    if not isinstance(parsed_response, dict):
+        matches = []
+    else:
+        matches = parsed_response.get("matches", [])
+
+    matches = sorted(
+        matches,
+        key=lambda m: m.get("match_score", 0),
+        reverse=True,
+    )
 
     return {
         "candidate_id": candidate_id,
@@ -110,6 +120,7 @@ async def match(candidate_id: str, _user=Depends(require_user)):
         "matches": matches,
         "match_score": matches[0].get("match_score", 0) if matches else 0,
     }
+
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8080))
