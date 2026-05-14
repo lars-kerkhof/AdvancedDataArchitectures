@@ -27,13 +27,8 @@ def health():
 
 @app.post("/match/{candidate_id}")
 async def match(candidate_id: str, _user=Depends(require_user)):
-    session_id = f"match-{candidate_id}"
-
-    await session_service.create_session(
-        app_name=APP_NAME,
-        user_id=USER_ID,
-        session_id=session_id,
-    )
+    from google.genai.errors import ServerError
+    import asyncio as _asyncio
 
     message = types.Content(
         role="user",
@@ -48,14 +43,35 @@ async def match(candidate_id: str, _user=Depends(require_user)):
     )
 
     final_response = None
+    last_error = None
 
-    async for event in runner.run_async(
-        user_id=USER_ID,
-        session_id=session_id,
-        new_message=message,
-    ):
-        if event.is_final_response():
-            final_response = event.content.parts[0].text
+    for attempt in range(3):
+        session_id = f"match-{candidate_id}-{attempt}"
+        await session_service.create_session(
+            app_name=APP_NAME,
+            user_id=USER_ID,
+            session_id=session_id,
+        )
+
+        try:
+            async for event in runner.run_async(
+                user_id=USER_ID,
+                session_id=session_id,
+                new_message=message,
+            ):
+                if event.is_final_response():
+                    final_response = event.content.parts[0].text
+            if final_response:
+                break
+        except ServerError as e:
+            last_error = e
+            if attempt < 2:
+                await _asyncio.sleep(2 * (attempt + 1))  # 2s, 4s
+                continue
+            raise HTTPException(
+                status_code=503,
+                detail=f"Gemini unavailable after retries: {e}",
+            )
 
     if not final_response:
         raise HTTPException(
@@ -64,13 +80,11 @@ async def match(candidate_id: str, _user=Depends(require_user)):
         )
 
     try:
-        # OPSCHONING: Verwijder Markdown-blokken die Gemini soms toevoegt
         cleaned_json = final_response.strip()
         if cleaned_json.startswith("```json"):
             cleaned_json = cleaned_json.replace("```json", "", 1)
         if cleaned_json.endswith("```"):
             cleaned_json = cleaned_json.rsplit("```", 1)[0]
-        
         parsed_response = json.loads(cleaned_json.strip())
     except json.JSONDecodeError:
         raise HTTPException(
@@ -82,19 +96,13 @@ async def match(candidate_id: str, _user=Depends(require_user)):
         )
 
     matches = parsed_response.get("matches", [])
-
-    # Sorteren op match_score (hoogste eerst)
-    matches = sorted(
-        matches,
-        key=lambda m: m.get("match_score", 0),
-        reverse=True,
-    )
+    matches = sorted(matches, key=lambda m: m.get("match_score", 0), reverse=True)
 
     return {
         "candidate_id": candidate_id,
         "agent": "matching_agent",
         "matches": matches,
-        "match_score": matches[0].get("match_score", 0) if matches else 0
+        "match_score": matches[0].get("match_score", 0) if matches else 0,
     }
 
 if __name__ == "__main__":
