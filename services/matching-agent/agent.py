@@ -58,7 +58,7 @@ Sort matches by match_score from highest to lowest.
         http_options=types.HttpOptions(
             retry_options=types.HttpRetryOptions(
                 initial_delay=1.0,
-                attempts=10,
+                attempts=4,
                 http_status_codes=[408, 429, 500, 502, 503, 504],
             ),
             timeout=120 * 1000,
