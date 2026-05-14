@@ -263,6 +263,7 @@
     {
       "endpoint": "/coordinate/match/{candidate_id}",
       "method": "POST",
+      "timeout": "120s",
       "output_encoding": "no-op",
       "input_headers": ["Content-Type", "Authorization"],
       "backend": [
