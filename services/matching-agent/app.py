@@ -59,8 +59,14 @@ async def match(candidate_id: str, _user=Depends(require_user)):
                 session_id=session_id,
                 new_message=message,
             ):
-                if event.is_final_response():
-                    final_response = event.content.parts[0].text
+            if not event.is_final_response():
+                continue
+            if not event.content or not event.content.parts:
+                continue
+            for part in event.content.parts:
+                if getattr(part, "text", None):
+                final_response = part.text
+                break
             if final_response:
                 break
         except ServerError as e:
