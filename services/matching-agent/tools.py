@@ -12,7 +12,6 @@ TRIAL_SERVICE_URL = os.environ.get("TRIAL_SERVICE_URL")
 def _get_with_service_token(url: str) -> requests.Response:
     response = requests.get(url, headers=auth_header(), timeout=30)
     if response.status_code == 401:
-        # Token may be stale (clock skew / IAM restart). Force-refresh once.
         get_service_token(force_refresh=True)
         response = requests.get(url, headers=auth_header(), timeout=30)
     response.raise_for_status()
@@ -20,22 +19,30 @@ def _get_with_service_token(url: str) -> requests.Response:
 
 
 def get_candidate_profile(candidate_id: str) -> dict:
-    return _get_with_service_token(
-        f"{CANDIDATE_SERVICE_URL}/candidates/{candidate_id}"
-    ).json()
+    try:
+        return _get_with_service_token(
+            f"{CANDIDATE_SERVICE_URL}/candidates/{candidate_id}"
+        ).json()
+    except Exception as e:
+        return {"error": f"Failed to fetch candidate {candidate_id}: {e}"}
 
 
 def get_trial_catalog() -> list[dict]:
-    return _get_with_service_token(f"{TRIAL_SERVICE_URL}/trials").json()
+    try:
+        return _get_with_service_token(f"{TRIAL_SERVICE_URL}/trials").json()
+    except Exception as e:
+        return [{"error": f"Failed to fetch trial catalog: {e}"}]
 
 
 def calculate_age(date_of_birth: str) -> int | None:
     if not date_of_birth:
         return None
+    try:
+        birth_date = date.fromisoformat(date_of_birth)
+    except (ValueError, TypeError):
+        return None
 
-    birth_date = date.fromisoformat(date_of_birth)
     today = date.today()
-
     return (
         today.year
         - birth_date.year
@@ -47,10 +54,15 @@ def calculate_match_score(candidate: dict, trial: dict) -> dict:
     score = 0
     reasons = []
 
-    candidate_conditions = [c.lower() for c in candidate.get("conditions", [])]
-    trial_condition = trial.get("condition", "").lower()
+    raw_conditions = candidate.get("conditions") or []
+    if isinstance(raw_conditions, str):
+        raw_conditions = [raw_conditions]
+    candidate_conditions = [str(c).lower() for c in raw_conditions]
+    trial_condition = (trial.get("condition") or "").lower()
 
-    if trial_condition and any(trial_condition in c or c in trial_condition for c in candidate_conditions):
+    if trial_condition and any(
+        trial_condition in c or c in trial_condition for c in candidate_conditions
+    ):
         score += 50
         reasons.append(f"Condition match: {trial_condition}")
 
