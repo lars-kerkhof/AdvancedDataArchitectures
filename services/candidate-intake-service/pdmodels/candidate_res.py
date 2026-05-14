@@ -25,7 +25,7 @@ class CandidateRes(BaseModel):
     preferred_language: str
     outreach_state: OutreachStateEnum
     recruitment_status: RecruitmentStatusEnum
-    enrolled: bool
+    enrolled: bool = False
     intake_submitted_at: Optional[datetime] = None
     last_intake_update_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
