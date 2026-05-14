@@ -32,7 +32,7 @@ def update_candidate_enrolled(candidate_id: str, enrolled: bool):
     url = f"{CANDIDATE_SERVICE_URL}/candidates/{candidate_id}/recruitment-status"
     payload = {"recruitment_status": "enrolled" if enrolled else "rejected"}
 
-    response = requests.put(url, json=payload, headers=auth_header(), timeout=30)
+    response = requests.put(url, json=payload, headers=auth_header(), timeout=150)
 
     if response.status_code == 401:
         get_service_token(force_refresh=True)
