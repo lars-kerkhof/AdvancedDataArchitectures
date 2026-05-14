@@ -26,10 +26,10 @@ class CandidateRes(BaseModel):
     outreach_state: OutreachStateEnum
     recruitment_status: RecruitmentStatusEnum
     enrolled: bool
-    intake_submitted_at: datetime
-    last_intake_update_at: datetime
-    created_at: datetime
-    updated_at: datetime
+    intake_submitted_at: Optional[datetime] = None
+    last_intake_update_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 class RecruitmentStatusRes(BaseModel):
