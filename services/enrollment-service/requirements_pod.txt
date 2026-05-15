@@ -5,3 +5,5 @@ sqlalchemy-utils
 python-multipart
 requests
 sqlalchemy-bigquery
+google-cloud-bigquery
+
