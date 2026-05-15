@@ -4,3 +4,4 @@ sqlalchemy
 sqlalchemy-utils
 python-multipart
 requests
+sqlalchemy-bigquery
