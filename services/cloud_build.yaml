@@ -97,7 +97,7 @@ steps:
       - "5000"
       - --allow-unauthenticated
       - --set-env-vars
-      - DB_URL=bigquery://$PROJECT_ID/enrollment_db
+      - DB_URL=bigquery://$PROJECT_ID/enrollment_db,BQ_LOCATION=EU,IAM_URL=https://iam-service-118369890374.us-central1.run.app
 
   # --- Matching Agent ---
   - name: gcr.io/cloud-builders/docker
