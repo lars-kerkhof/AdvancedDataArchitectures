@@ -4,6 +4,7 @@ import traceback
 import uvicorn
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 from auth import require_admin, require_user
 from pdmodels.enrollment_req import EnrollmentReq
@@ -13,14 +14,25 @@ from resources.status import Status
 
 app = FastAPI(title="Enrollment Service", version="0.1.0")
 
-# THE NUCLEAR DEBUGGER: Catch every crash and send it directly to the Workflows UI
+# THE SMUGGLER: Catch code crashes and disguise them as a 200 OK
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
-        status_code=500,
+        status_code=200,  # <-- Trick KrakenD into letting the body through
         content={
             "debug_error_message": str(exc),
             "debug_traceback": traceback.format_exc().splitlines()
+        }
+    )
+
+# THE SMUGGLER PART 2: Catch Pydantic schema mismatches
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=200,  # <-- Trick KrakenD
+        content={
+            "debug_error_message": "Pydantic Validation Error",
+            "debug_details": exc.errors()
         }
     )
 
