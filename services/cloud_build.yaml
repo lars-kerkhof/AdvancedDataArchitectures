@@ -147,7 +147,7 @@ steps:
       - "8080"
       - --allow-unauthenticated
       - --update-env-vars
-      - MATCHING_AGENT_URL=https://matching-agent-118369890374.us-central1.run.app,CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,ENROLLMENT_SERVICE_URL=https://enrollment-service-118369890374.us-central1.run.app,MIN_MATCH_SCORE=50,IAM_URL=https://iam-service-118369890374.us-central1.run.app,SERVICE_ACCOUNT_EMAIL=coordinator-agent@internal,SERVICE_ACCOUNT_PASSWORD=REPLACE_WITH_CURRENT_COORDINATOR_PASSWORD
+      - MATCHING_AGENT_URL=https://matching-agent-118369890374.us-central1.run.app,CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,ENROLLMENT_SERVICE_URL=https://enrollment-service-118369890374.us-central1.run.app,MIN_MATCH_SCORE=50,IAM_URL=https://iam-service-118369890374.us-central1.run.app,SERVICE_ACCOUNT_EMAIL=coordinator-agent@internal,SERVICE_ACCOUNT_PASSWORD=coordpass123
 
   # --- Deploy Google Workflow ---
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
