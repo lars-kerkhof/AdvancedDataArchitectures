@@ -68,6 +68,11 @@ async def match(candidate_id: str, _user=Depends(require_user)):
             detail="Matching agent completed the tool loop but produced no final text response.",
         )
 
+    if not final_response:
+        raise HTTPException(...)
+
+    print(f"DEBUG LLM RAW: {final_response}", flush=True)
+
     try:
         cleaned_json = final_response.strip()
         if cleaned_json.startswith("```json"):
