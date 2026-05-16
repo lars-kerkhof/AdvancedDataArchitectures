@@ -83,3 +83,12 @@ def calculate_match_score(candidate: dict, trial: dict) -> dict:
         "match_score": score,
         "match_reasons": reasons,
     }
+
+
+def score_trials(candidate: dict, trials: list[dict]) -> list[dict]:
+    """Score every trial in `trials` against `candidate`. Returns a sorted list
+    of match dicts (highest score first), filtering out zero-score trials."""
+    matches = [calculate_match_score(candidate, t) for t in trials]
+    matches = [m for m in matches if m.get("match_score", 0) > 0]
+    matches.sort(key=lambda m: m["match_score"], reverse=True)
+    return matches
