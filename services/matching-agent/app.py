@@ -49,18 +49,23 @@ async def match(candidate_id: str, _user=Depends(require_user)):
 
     final_response = None
 
+    # THE FIX: Safely iterate through the runner's events
     async for event in runner.run_async(
         user_id=USER_ID,
         session_id=session_id,
         new_message=message,
     ):
         if event.is_final_response():
-            final_response = event.content.parts[0].text
+            # Loop through all parts in the content
+            for part in event.content.parts:
+                # Safely check if this part has text (ignoring function_call parts)
+                if hasattr(part, "text") and part.text:
+                    final_response = part.text
 
     if not final_response:
         raise HTTPException(
             status_code=500,
-            detail="Matching agent produced no response",
+            detail="Matching agent completed the tool loop but produced no final text response.",
         )
 
     try:
