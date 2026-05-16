@@ -1,7 +1,7 @@
 # daos/enrollment_dao.py
 import uuid
 
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import relationship, backref
 
 from daos.status_dao import StatusDAO
@@ -16,7 +16,7 @@ class EnrollmentDAO(Base):
     trial_id = Column(String, nullable=False)
     match_score = Column(Integer, nullable=False)
     match_reason = Column(String, nullable=False)
-    created_at = Column(DateTime, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=False), nullable=False)
 
     # FIX: Map exactly to the BigQuery column named "status"
     status = Column(String, ForeignKey("status.id"))
