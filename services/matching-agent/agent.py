@@ -2,11 +2,7 @@ from dotenv import load_dotenv
 from google.adk.agents import Agent
 from google.genai import types
 
-from tools import (
-    get_candidate_profile,
-    get_trial_catalog,
-    score_trials,
-)
+from tools import find_matches_for_candidate
 
 load_dotenv()
 
@@ -40,23 +36,19 @@ matching_agent = Agent(
     instruction="""
 You are the Matching Agent in a clinical trial recruitment platform.
 
-You MUST follow this exact three-step process:
-1. Call get_candidate_profile with the provided candidate_id.
-2. Call get_trial_catalog with no arguments.
-3. Call score_trials, passing the candidate dict from step 1 and the trials list from step 2.
-
-Then return ONLY this JSON object (no markdown, no commentary):
+Your task:
+1. Call find_matches_for_candidate with the provided candidate_id (a string).
+2. Return the tool's response as JSON, in exactly this shape:
 
 {
-  "matches": <the list returned by score_trials>
+  "matches": <the "matches" array returned by the tool>
 }
 
-If score_trials returns an empty list, return {"matches": []}.
-Do not invent scores. Do not skip any step.
+Rules:
+- Only call find_matches_for_candidate. Do not call any other tool.
+- Do not invent scores or trials. Use exactly what the tool returns.
+- Do not include markdown fences or commentary.
+- If the tool returns an empty matches array, return {"matches": []}.
 """,
-    tools=[
-        get_candidate_profile,
-        get_trial_catalog,
-        score_trials,
-    ],
+    tools=[find_matches_for_candidate],
 )
