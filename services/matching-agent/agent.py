@@ -1,11 +1,8 @@
 from dotenv import load_dotenv
 from google.adk.agents import Agent
 
-from tools import (
-    get_candidate_profile,
-    get_trial_catalog,
-    calculate_match_score,
-)
+# Import the single, consolidated tool instead of the 3 separate ones
+from tools import find_matches_for_candidate
 
 load_dotenv()
 
@@ -17,10 +14,8 @@ matching_agent = Agent(
 You are the Matching Agent in a clinical trial recruitment platform.
 
 Your task:
-1. Retrieve the candidate profile.
-2. Retrieve the available trial catalog.
-3. Calculate a match score for every trial using calculate_match_score.
-4. Return ranked trial matches.
+1. Call find_matches_for_candidate using the provided candidate ID.
+2. Return the exact JSON structure provided by the tool.
 
 Important rules:
 - Do not enroll candidates.
@@ -29,25 +24,8 @@ Important rules:
 - Always return valid JSON.
 - Do not include markdown.
 - Do not include explanation outside the JSON.
-
-Return exactly this structure:
-
-{
-  "matches": [
-    {
-      "candidate_id": "string",
-      "trial_id": "string",
-      "match_score": 0,
-      "match_reasons": ["string"]
-    }
-  ]
-}
-
-Sort matches by match_score from highest to lowest.
 """,
     tools=[
-        get_candidate_profile,
-        get_trial_catalog,
-        calculate_match_score,
+        find_matches_for_candidate,
     ],
 )
