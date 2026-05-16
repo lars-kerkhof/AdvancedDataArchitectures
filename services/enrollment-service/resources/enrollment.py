@@ -1,3 +1,4 @@
+# resources/enrollment.py
 from datetime import datetime
 
 from fastapi import status
@@ -20,9 +21,11 @@ class Enrollment:
             candidate_id=e_req.candidate_id,
             trial_id=e_req.trial_id,
             match_score=e_req.match_score,
-            match_reason=e_req.match_reason,
+            # FIX: Flatten the array here into the single string BigQuery expects
+            match_reason=", ".join(e_req.match_reasons),
             created_at=datetime.now(),
-            status=StatusDAO(STATUS_READY_FOR_CONSENT, datetime.now())
+            # FIX: Use the updated relationship name
+            status_rel=StatusDAO(STATUS_READY_FOR_CONSENT, datetime.now())
         )
 
         session.add(enrollment)
@@ -36,7 +39,7 @@ class Enrollment:
             "match_score": enrollment.match_score,
             "match_reason": enrollment.match_reason,
             "created_at": enrollment.created_at.isoformat(),
-            "status": enrollment.status.status_name
+            "status": enrollment.status_rel.status_name
         }
 
         session.close()
@@ -52,7 +55,7 @@ class Enrollment:
         enrollment = session.query(EnrollmentDAO).filter(EnrollmentDAO.id == e_id).first()
 
         if enrollment:
-            status_obj = enrollment.status
+            status_obj = enrollment.status_rel
             output = {
                 "enrollment_id": enrollment.id,
                 "candidate_id": enrollment.candidate_id,
@@ -81,7 +84,7 @@ class Enrollment:
         enrollment = session.query(EnrollmentDAO).filter(EnrollmentDAO.id == e_id).first()
 
         if enrollment:
-            session.delete(enrollment.status)
+            session.delete(enrollment.status_rel)
             session.delete(enrollment)
             session.commit()
             session.close()
