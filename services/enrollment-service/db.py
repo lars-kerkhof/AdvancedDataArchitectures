@@ -11,7 +11,7 @@ DB_URL = os.getenv("DB_URL", f"bigquery://{GCP_PROJECT_ID}/{BQ_DATASET}")
 
 engine = create_engine(
     DB_URL,
-    location=os.getenv("BQ_LOCATION", "EU"),
+    location=os.getenv("BQ_LOCATION", "US"),
 )
 
 Session = sessionmaker(bind=engine)
