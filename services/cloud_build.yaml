@@ -149,6 +149,29 @@ steps:
       - --update-env-vars
       - MATCHING_AGENT_URL=https://matching-agent-118369890374.us-central1.run.app,CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,ENROLLMENT_SERVICE_URL=https://enrollment-service-118369890374.us-central1.run.app,MIN_MATCH_SCORE=50,IAM_URL=https://iam-service-118369890374.us-central1.run.app,SERVICE_ACCOUNT_EMAIL=coordinator-agent@internal,SERVICE_ACCOUNT_PASSWORD=coordpass123
 
+    # --- KrakenD API Gateway ---
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "$_LOCATION-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/api-gateway:0.0.1", "./infrastructure/api-gateway"]
+
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "$_LOCATION-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/api-gateway:0.0.1"]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - api-gateway
+      - --image
+      - $_LOCATION-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/api-gateway:0.0.1
+      - --region
+      - $_LOCATION
+      - --platform
+      - managed
+      - --port
+      - "8080"
+      - --allow-unauthenticated
+      
   # --- Deploy Google Workflow ---
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
