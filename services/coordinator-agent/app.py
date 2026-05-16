@@ -29,11 +29,10 @@ def create_enrollment(best_match: dict) -> dict:
         )
 
     enrollment_payload = {
-        "candidate_id": best_match["candidate_id"],
-        "trial_id": best_match["trial_id"],
-        "match_score": best_match["match_score"],
-        "match_reason": "; ".join(best_match.get("match_reasons", [])),
-        "status": "matched",
+    "candidate_id": best_match["candidate_id"],
+    "trial_id": best_match["trial_id"],
+    "match_score": best_match["match_score"],
+    "match_reasons": best_match.get("match_reasons", []),
     }
 
     url = f"{ENROLLMENT_SERVICE_URL}/enrollments"
