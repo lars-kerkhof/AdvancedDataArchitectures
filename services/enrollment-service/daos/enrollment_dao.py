@@ -1,5 +1,4 @@
 # daos/enrollment_dao.py
-
 import uuid
 
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
@@ -19,17 +18,18 @@ class EnrollmentDAO(Base):
     match_reason = Column(String, nullable=False)
     created_at = Column(DateTime, nullable=False)
 
-    status_id = Column(String, ForeignKey("status.id"))
-    status = relationship(
+    # FIX: Map exactly to the BigQuery column named "status"
+    status = Column(String, ForeignKey("status.id"))
+    status_rel = relationship(
         StatusDAO.__name__,
         backref=backref("enrollment", uselist=False, cascade="all, delete")
     )
 
-    def __init__(self, candidate_id, trial_id, match_score, match_reason, created_at, status):
+    def __init__(self, candidate_id, trial_id, match_score, match_reason, created_at, status_rel):
         self.id = f"enr_{uuid.uuid4().hex[:12]}"
         self.candidate_id = candidate_id
         self.trial_id = trial_id
         self.match_score = match_score
         self.match_reason = match_reason
         self.created_at = created_at
-        self.status = status
+        self.status_rel = status_rel
