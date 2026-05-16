@@ -4,7 +4,6 @@ from datetime import date
 
 from service_token import auth_header, get_service_token
 
-
 CANDIDATE_SERVICE_URL = os.environ.get("CANDIDATE_SERVICE_URL")
 TRIAL_SERVICE_URL = os.environ.get("TRIAL_SERVICE_URL")
 
@@ -65,8 +64,30 @@ def calculate_match_score(candidate: dict, trial: dict) -> dict:
             reasons.append("Age fits trial criteria")
 
     return {
-        "candidate_id": candidate.get("id"),
+        "candidate_id": candidate.get("id", ""),
         "trial_id": trial.get("id"),
         "match_score": score,
         "match_reasons": reasons,
     }
+
+
+def find_matches_for_candidate(candidate_id: str) -> dict:
+    """
+    Master tool for the matching agent. Fetches profiles, catalogs, 
+    calculates all scores, and returns the ranked results.
+    """
+    # 1. Fetch data using the existing helper functions
+    candidate = get_candidate_profile(candidate_id)
+    trials = get_trial_catalog()
+
+    # 2. Score every trial
+    matches = []
+    for trial in trials:
+        match_result = calculate_match_score(candidate, trial)
+        matches.append(match_result)
+
+    # 3. Sort by match_score descending
+    matches = sorted(matches, key=lambda m: m.get("match_score", 0), reverse=True)
+
+    # 4. Return the exact JSON structure the agent and app.py expect
+    return {"matches": matches}
