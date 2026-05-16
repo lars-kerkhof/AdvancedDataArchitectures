@@ -49,7 +49,7 @@ async def match(candidate_id: str, _user=Depends(require_user)):
 
     final_response = None
 
-    # THE FIX: Safely iterate through the runner's events
+    # Safely iterate through the runner's events
     async for event in runner.run_async(
         user_id=USER_ID,
         session_id=session_id,
@@ -67,9 +67,6 @@ async def match(candidate_id: str, _user=Depends(require_user)):
             status_code=500,
             detail="Matching agent completed the tool loop but produced no final text response.",
         )
-
-    if not final_response:
-        raise HTTPException(...)
 
     print(f"DEBUG LLM RAW: {final_response}", flush=True)
 
@@ -89,6 +86,12 @@ async def match(candidate_id: str, _user=Depends(require_user)):
                 "raw_response": final_response,
             },
         )
+
+    # THE FIX: Handle tool-response nesting structure defensively
+    if "find_matches_for_candidate_response" in parsed_response:
+        parsed_response = parsed_response["find_matches_for_candidate_response"]
+    elif "find_matches_for_candidate" in parsed_response:
+        parsed_response = parsed_response["find_matches_for_candidate"]
 
     matches = parsed_response.get("matches", [])
 
