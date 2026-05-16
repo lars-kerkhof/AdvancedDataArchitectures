@@ -91,3 +91,7 @@ def find_matches_for_candidate(candidate_id: str) -> dict:
 
     # 4. Return the exact JSON structure the agent and app.py expect
     return {"matches": matches}
+
+    print(f"DEBUG TOOLS: Returning {len(matches)} matches. Top score: {matches[0].get('match_score') if matches else 'NONE'}", flush=True)
+
+    return {"matches": matches}
