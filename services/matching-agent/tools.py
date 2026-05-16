@@ -85,10 +85,17 @@ def calculate_match_score(candidate: dict, trial: dict) -> dict:
     }
 
 
-def score_trials(candidate: dict, trials: list[dict]) -> list[dict]:
-    """Score every trial in `trials` against `candidate`. Returns a sorted list
-    of match dicts (highest score first), filtering out zero-score trials."""
+def find_matches_for_candidate(candidate_id: str) -> dict:
+    """Score every trial in the catalog against the given candidate and return
+    a ranked list of matches. The agent only needs to call this one tool."""
+    candidate = get_candidate_profile(candidate_id)
+    trials = get_trial_catalog()
+
     matches = [calculate_match_score(candidate, t) for t in trials]
     matches = [m for m in matches if m.get("match_score", 0) > 0]
     matches.sort(key=lambda m: m["match_score"], reverse=True)
-    return matches
+
+    return {
+        "candidate_id": candidate_id,
+        "matches": matches,
+    }
