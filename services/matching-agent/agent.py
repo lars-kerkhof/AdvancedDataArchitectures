@@ -10,7 +10,7 @@ MATCHING_MCP_URL = os.environ["MATCHING_MCP_URL"]
 
 mcp_tools = McpToolset(
     connection_params=StreamableHTTPConnectionParams(
-        url=f"{MATCHING_MCP_URL}/mcp",
+        url=f"{MATCHING_MCP_URL}/mcp/",
         timeout=120.0,
     ),
 )
