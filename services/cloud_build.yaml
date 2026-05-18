@@ -99,6 +99,31 @@ steps:
       - --update-env-vars
       - DB_URL=bigquery://$PROJECT_ID/enrollment_db?location=us-central1,BQ_LOCATION=us-central1,GCP_PROJECT_ID=$PROJECT_ID,IAM_URL=https://iam-service-118369890374.us-central1.run.app
 
+  # --- Matching MCP Server ---
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "$_LOCATION-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/matching-mcp:0.0.1", "./services/matching-mcp"]
+
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "$_LOCATION-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/matching-mcp:0.0.1"]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - matching-mcp
+      - --image
+      - $_LOCATION-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/matching-mcp:0.0.1
+      - --region
+      - $_LOCATION
+      - --platform
+      - managed
+      - --port
+      - "8080"
+      - --allow-unauthenticated
+      - --update-env-vars
+      - CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,TRIAL_SERVICE_URL=https://trial-catalog-service-118369890374.us-central1.run.app,IAM_URL=https://iam-service-118369890374.us-central1.run.app,SERVICE_ACCOUNT_EMAIL=matching-mcp@internal,SERVICE_ACCOUNT_PASSWORD=mcppass123
+
   # --- Matching Agent ---
   - name: gcr.io/cloud-builders/docker
     args: ["build", "-t", "$_LOCATION-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/matching-agent:0.0.1", "./services/matching-agent"]
@@ -122,7 +147,7 @@ steps:
       - "8080"
       - --allow-unauthenticated
       - --update-env-vars
-      - CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,TRIAL_SERVICE_URL=https://trial-catalog-service-118369890374.us-central1.run.app,APP_NAME=clinical_trial_matching,AGENT_USER_ID=api_user,IAM_URL=https://iam-service-118369890374.us-central1.run.app,GOOGLE_GENAI_USE_VERTEXAI=1,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$_LOCATION,SERVICE_ACCOUNT_EMAIL=matching-agent@internal,SERVICE_ACCOUNT_PASSWORD=matchpass123
+      - APP_NAME=clinical_trial_matching,AGENT_USER_ID=api_user,IAM_URL=https://iam-service-118369890374.us-central1.run.app,GOOGLE_GENAI_USE_VERTEXAI=1,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$_LOCATION,SERVICE_ACCOUNT_EMAIL=matching-agent@internal,SERVICE_ACCOUNT_PASSWORD=matchpass123,MATCHING_MCP_URL=https://matching-mcp-118369890374.us-central1.run.app
 
   # --- Coordinator Agent ---
   - name: gcr.io/cloud-builders/docker
@@ -149,7 +174,7 @@ steps:
       - --update-env-vars
       - MATCHING_AGENT_URL=https://matching-agent-118369890374.us-central1.run.app,CANDIDATE_SERVICE_URL=https://candidate-intake-service-118369890374.us-central1.run.app,ENROLLMENT_SERVICE_URL=https://enrollment-service-118369890374.us-central1.run.app,MIN_MATCH_SCORE=50,IAM_URL=https://iam-service-118369890374.us-central1.run.app,SERVICE_ACCOUNT_EMAIL=coordinator-agent@internal,SERVICE_ACCOUNT_PASSWORD=coordpass123
 
-    # --- KrakenD API Gateway ---
+  # --- KrakenD API Gateway ---
   - name: gcr.io/cloud-builders/docker
     args: ["build", "-t", "$_LOCATION-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/api-gateway:0.0.1", "./infrastructure/api-gateway"]
 
@@ -171,7 +196,7 @@ steps:
       - --port
       - "8080"
       - --allow-unauthenticated
-      
+
   # --- Deploy Google Workflow ---
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
